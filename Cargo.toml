@@ -1,0 +1,21 @@
+[package]
+name = "gevulot-rs"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bip32 = "0.5.1"
+cosmos-sdk-proto = "0.21.1"
+cosmrs = { version = "0.16.0", features = ["tokio", "grpc", "rpc", "tendermint-rpc"] }
+hex = "0.4.3"
+prost = "0.12.6"
+rand_core = "0.6.4"
+tokio = { version = "1.38.0", features = ["full"] }
+tonic = { version = "0.11.0", features = ["tls"] }
+
+[build-dependencies]
+prost-build = "0.12.6"
+tonic-buf-build = "0.2.1"
+tonic-build = "0.11.0"
