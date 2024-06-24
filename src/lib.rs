@@ -221,6 +221,8 @@ impl GevulotClient {
 
 #[cfg(test)]
 mod tests {
+    use self::builders::{ByteSize, ByteUnit::{Byte, Gigabyte}};
+
     use super::*;
     use tokio;
 
@@ -264,8 +266,8 @@ mod tests {
             .name("test")
             .cpus(1000)
             .gpus(1000)
-            .memory(32000)
-            .disk(128000)
+            .memory((32, Gigabyte).into())
+            .disk((128, Gigabyte).into())
             .build();
         cli.send_msg(msg, "", &signer).await.unwrap();
     }
@@ -281,7 +283,7 @@ mod tests {
         let msg = builders::MsgCreatePinBuilder::new()
             .cid("QmSWeBJYvDqKUFG3om4gsrKGf379zk8Jq5tYXpDp7Xo")
             .creator(&signer.public_address.to_string())
-            .bytes(32)
+            .bytes((32, Byte).into())
             .time(3600)
             .redundancy(1)
             .name("test")

@@ -20,6 +20,12 @@ impl ByteUnit {
     }
 }
 
+impl From<(u64, ByteUnit)> for ByteSize {
+    fn from(value: (u64, ByteUnit)) -> Self {
+        Self { value: value.0, unit: value.1 }
+    }
+}
+
 pub struct ByteSize {
     value: u64,
     unit: ByteUnit,
@@ -227,8 +233,8 @@ impl MsgCreatePinBuilder {
         self
     }
 
-    pub fn bytes(mut self, bytes: u64) -> Self {
-        self.bytes = bytes;
+    pub fn bytes(mut self, bytes: ByteSize) -> Self {
+        self.bytes = bytes.to_bytes();
         self
     }
 
@@ -326,13 +332,13 @@ impl MsgCreateWorkerBuilder {
         self
     }
 
-    pub fn memory(mut self, memory: u64) -> Self {
-        self.memory = memory;
+    pub fn memory(mut self, memory: ByteSize) -> Self {
+        self.memory = memory.to_bytes();
         self
     }
 
-    pub fn disk(mut self, disk: u64) -> Self {
-        self.disk = disk;
+    pub fn disk(mut self, disk: ByteSize) -> Self {
+        self.disk = disk.to_bytes();
         self
     }
 
