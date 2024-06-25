@@ -301,7 +301,7 @@ mod tests {
             "gvlt",
             None,
         ).unwrap();
-        let msg = builders::DeletePinBuilder::new()
+        let msg = builders::MsgDeletePinBuilder::new()
             .creator(&signer.public_address.to_string())
             .cid("QmSWeBJYvDqKUFG3om4gsrKGf379zk8Jq5tYXpDp7Xo")
             .build();

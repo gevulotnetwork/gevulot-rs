@@ -1,6 +1,11 @@
 use std::collections::HashMap;
 
-use crate::proto::gevulot::gevulot::{MsgCreatePin, MsgCreateTask, MsgCreateWorker, MsgDeletePin};
+use crate::proto::gevulot::gevulot::{
+    MsgCreatePin, MsgCreateTask, MsgCreateWorker,
+    MsgDeletePin, MsgDeleteTask, MsgDeleteWorker,
+    MsgAckPin, MsgAnnounceWorkerExit,
+    MsgAcceptTask, MsgDeclineTask, MsgFinishTask,
+};
 
 pub enum ByteUnit {
     Byte,
@@ -22,7 +27,10 @@ impl ByteUnit {
 
 impl From<(u64, ByteUnit)> for ByteSize {
     fn from(value: (u64, ByteUnit)) -> Self {
-        Self { value: value.0, unit: value.1 }
+        Self {
+            value: value.0,
+            unit: value.1,
+        }
     }
 }
 
@@ -129,7 +137,10 @@ impl MsgCreateTaskBuilder {
         self
     }
 
-    pub fn input_contexts(mut self, input_contexts: std::collections::HashMap<String, String>) -> Self {
+    pub fn input_contexts(
+        mut self,
+        input_contexts: std::collections::HashMap<String, String>,
+    ) -> Self {
         self.input_contexts = input_contexts;
         self
     }
@@ -360,12 +371,12 @@ impl MsgCreateWorkerBuilder {
     }
 }
 
-pub struct DeletePinBuilder {
+pub struct MsgDeletePinBuilder {
     creator: String,
     cid: String,
 }
 
-impl DeletePinBuilder {
+impl MsgDeletePinBuilder {
     pub fn new() -> Self {
         Self {
             creator: String::new(),
@@ -387,6 +398,286 @@ impl DeletePinBuilder {
         MsgDeletePin {
             creator: self.creator,
             cid: self.cid,
+        }
+    }
+}
+
+pub struct MsgDeleteTaskBuilder {
+    creator: String,
+    id: String,
+}
+
+impl MsgDeleteTaskBuilder {
+    pub fn new() -> Self {
+        Self {
+            creator: String::new(),
+            id: String::new(),
+        }
+    }
+
+    pub fn creator(mut self, creator: &str) -> Self {
+        self.creator = creator.to_string();
+        self
+    }
+
+    pub fn id(mut self, id: &str) -> Self {
+        self.id = id.to_string();
+        self
+    }
+
+    pub fn build(self) -> MsgDeleteTask {
+        MsgDeleteTask {
+            creator: self.creator,
+            id: self.id,
+        }
+    }
+}
+
+pub struct MsgDeleteWorkerBuilder {
+    creator: String,
+    id: String,
+}
+
+impl MsgDeleteWorkerBuilder {
+    pub fn new() -> Self {
+        Self {
+            creator: String::new(),
+            id: String::new(),
+        }
+    }
+
+    pub fn creator(mut self, creator: &str) -> Self {
+        self.creator = creator.to_string();
+        self
+    }
+
+    pub fn id(mut self, id: &str) -> Self {
+        self.id = id.to_string();
+        self
+    }
+
+    pub fn build(self) -> MsgDeleteWorker {
+        MsgDeleteWorker {
+            creator: self.creator,
+            id: self.id,
+        }
+    }
+}
+
+pub struct MsgAckPinBuilder {
+    creator: String,
+    cid: String,
+    worker_id: String,
+}
+
+impl MsgAckPinBuilder {
+    pub fn new() -> Self {
+        Self {
+            creator: String::new(),
+            cid: String::new(),
+            worker_id: String::new(),
+        }
+    }
+
+    pub fn creator(mut self, creator: &str) -> Self {
+        self.creator = creator.to_string();
+        self
+    }
+
+    pub fn cid(mut self, cid: &str) -> Self {
+        self.cid = cid.to_string();
+        self
+    }
+
+    pub fn worker_id(mut self, worker_id: &str) -> Self {
+        self.worker_id = worker_id.to_string();
+        self
+    }
+
+    pub fn build(self) -> MsgAckPin {
+        MsgAckPin {
+            creator: self.creator,
+            cid: self.cid,
+            worker_id: self.worker_id,
+        }
+    }
+}
+
+pub struct MsgAnnounceWorkerExitBuilder {
+    creator: String,
+    worker_id: String,
+}
+
+impl MsgAnnounceWorkerExitBuilder {
+    pub fn new() -> Self {
+        Self {
+            creator: String::new(),
+            worker_id: String::new(),
+        }
+    }
+
+    pub fn creator(mut self, creator: &str) -> Self {
+        self.creator = creator.to_string();
+        self
+    }
+
+    pub fn worker_id(mut self, worker_id: &str) -> Self {
+        self.worker_id = worker_id.to_string();
+        self
+    }
+
+    pub fn build(self) -> MsgAnnounceWorkerExit {
+        MsgAnnounceWorkerExit {
+            creator: self.creator,
+            worker_id: self.worker_id,
+        }
+    }
+}
+pub struct MsgAcceptTaskBuilder {
+    creator: String,
+    task_id: String,
+    worker_id: String,
+}
+
+impl MsgAcceptTaskBuilder {
+    pub fn new() -> Self {
+        Self {
+            creator: String::new(),
+            task_id: String::new(),
+            worker_id: String::new(),
+        }
+    }
+
+    pub fn creator(mut self, creator: &str) -> Self {
+        self.creator = creator.to_string();
+        self
+    }
+
+    pub fn task_id(mut self, task_id: &str) -> Self {
+        self.task_id = task_id.to_string();
+        self
+    }
+
+    pub fn worker_id(mut self, worker_id: &str) -> Self {
+        self.worker_id = worker_id.to_string();
+        self
+    }
+
+    pub fn build(self) -> MsgAcceptTask {
+        MsgAcceptTask {
+            creator: self.creator,
+            task_id: self.task_id,
+            worker_id: self.worker_id,
+        }
+    }
+}
+
+pub struct MsgDeclineTaskBuilder {
+    creator: String,
+    task_id: String,
+    worker_id: String,
+}
+
+impl MsgDeclineTaskBuilder {
+    pub fn new() -> Self {
+        Self {
+            creator: String::new(),
+            task_id: String::new(),
+            worker_id: String::new(),
+        }
+    }
+
+    pub fn creator(mut self, creator: &str) -> Self {
+        self.creator = creator.to_string();
+        self
+    }
+
+    pub fn task_id(mut self, task_id: &str) -> Self {
+        self.task_id = task_id.to_string();
+        self
+    }
+
+    pub fn worker_id(mut self, worker_id: &str) -> Self {
+        self.worker_id = worker_id.to_string();
+        self
+    }
+
+    pub fn build(self) -> MsgDeclineTask {
+        MsgDeclineTask {
+            creator: self.creator,
+            task_id: self.task_id,
+            worker_id: self.worker_id,
+        }
+    }
+}
+
+pub struct MsgFinishTaskBuilder {
+    creator: String,
+    task_id: String,
+    exit_code: i32,
+    stdout: String,
+    stderr: String,
+    output_contexts: Vec<String>,
+    error: String,
+}
+
+impl MsgFinishTaskBuilder {
+    pub fn new() -> Self {
+        Self {
+            creator: String::new(),
+            task_id: String::new(),
+            exit_code: 0,
+            stdout: String::new(),
+            stderr: String::new(),
+            output_contexts: Vec::new(),
+            error: String::new(),
+        }
+    }
+
+    pub fn creator(mut self, creator: &str) -> Self {
+        self.creator = creator.to_string();
+        self
+    }
+
+    pub fn task_id(mut self, task_id: &str) -> Self {
+        self.task_id = task_id.to_string();
+        self
+    }
+
+    pub fn exit_code(mut self, exit_code: i32) -> Self {
+        self.exit_code = exit_code;
+        self
+    }
+
+    pub fn stdout(mut self, stdout: &str) -> Self {
+        self.stdout = stdout.to_string();
+        self
+    }
+
+    pub fn stderr(mut self, stderr: &str) -> Self {
+        self.stderr = stderr.to_string();
+        self
+    }
+
+    pub fn output_contexts(mut self, output_contexts: Vec<String>) -> Self {
+        self.output_contexts = output_contexts;
+        self
+    }
+
+    pub fn error(mut self, error: &str) -> Self {
+        self.error = error.to_string();
+        self
+    }
+
+    pub fn build(self) -> MsgFinishTask {
+        MsgFinishTask {
+            creator: self.creator,
+            task_id: self.task_id,
+            exit_code: self.exit_code,
+            stdout: self.stdout,
+            stderr: self.stderr,
+            output_contexts: self.output_contexts,
+            error: self.error,
         }
     }
 }
