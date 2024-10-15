@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package gevulot.gevulot;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "gevulot/gevulot/params.proto";
+import "gevulot/gevulot/worker.proto";
+import "gevulot/gevulot/task.proto";
+import "gevulot/gevulot/workflow.proto";
+import "gevulot/gevulot/proof.proto";
+import "gevulot/gevulot/pin.proto";
+
+option go_package = "gevulot/x/gevulot/types";
+
+// GenesisState defines the gevulot module's genesis state.
+message GenesisState {
+  
+  // params defines all the parameters of the module.
+           Params     params         = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated Worker     workerList     = 2 [(gogoproto.nullable) = false] ;
+  repeated Task       taskList       = 3 [(gogoproto.nullable) = false] ;
+  repeated Workflow   workflowList   = 4 [(gogoproto.nullable) = false] ;
+  repeated Proof      proofList      = 5 [(gogoproto.nullable) = false] ;
+  repeated Pin        pinList        = 6 [(gogoproto.nullable) = false] ;
+}
+

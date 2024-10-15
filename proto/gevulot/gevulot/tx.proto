@@ -1,0 +1,252 @@
+syntax = "proto3";
+
+package gevulot.gevulot;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "gevulot/gevulot/params.proto";
+import "gevulot/gevulot/worker.proto";
+import "gevulot/gevulot/task.proto";
+import "gevulot/gevulot/workflow.proto";
+import "gevulot/gevulot/proof.proto";
+import "gevulot/gevulot/pin.proto";
+import "gevulot/gevulot/util.proto";
+
+option go_package = "gevulot/x/gevulot/types";
+
+// Msg defines the Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+  
+  // UpdateParams defines a (governance) operation for updating the module
+  // parameters. The authority defaults to the x/gov module account.
+  rpc UpdateParams       (MsgUpdateParams      ) returns (MsgUpdateParamsResponse      );
+  rpc CreateWorker       (MsgCreateWorker      ) returns (MsgCreateWorkerResponse      );
+  rpc UpdateWorker       (MsgUpdateWorker      ) returns (MsgUpdateWorkerResponse      );
+  rpc DeleteWorker       (MsgDeleteWorker      ) returns (MsgDeleteWorkerResponse      );
+  rpc CreateTask         (MsgCreateTask        ) returns (MsgCreateTaskResponse        );
+  rpc DeleteTask         (MsgDeleteTask        ) returns (MsgDeleteTaskResponse        );
+  rpc CreateWorkflow     (MsgCreateWorkflow    ) returns (MsgCreateWorkflowResponse    );
+  rpc DeleteWorkflow     (MsgDeleteWorkflow    ) returns (MsgDeleteWorkflowResponse    );
+  rpc CreateProof        (MsgCreateProof       ) returns (MsgCreateProofResponse       );
+  rpc DeleteProof        (MsgDeleteProof       ) returns (MsgDeleteProofResponse       );
+  rpc AnnounceWorkerExit (MsgAnnounceWorkerExit) returns (MsgAnnounceWorkerExitResponse);
+  rpc CreatePin          (MsgCreatePin         ) returns (MsgCreatePinResponse         );
+  rpc DeletePin          (MsgDeletePin         ) returns (MsgDeletePinResponse         );
+  rpc AckPin             (MsgAckPin            ) returns (MsgAckPinResponse            );
+  rpc AcceptTask         (MsgAcceptTask        ) returns (MsgAcceptTaskResponse        );
+  rpc DeclineTask        (MsgDeclineTask       ) returns (MsgDeclineTaskResponse       );
+  rpc FinishTask         (MsgFinishTask        ) returns (MsgFinishTaskResponse        );
+}
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) =                         "authority";
+  option           (amino.name) = "gevulot/x/gevulot/MsgUpdateParams";
+  
+  // authority is the address that controls the module (defaults to x/gov unless
+  // overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the module parameters to update.
+  
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
+
+message MsgCreateWorker {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator        = 1;
+  string name           = 2;
+  string description    = 3;
+  uint64 cpus           = 4;
+  uint64 gpus           = 5;
+  uint64 memory         = 6;
+  uint64 disk           = 7;
+  repeated Label labels = 8;
+  repeated string tags = 9;
+}
+
+message MsgCreateWorkerResponse {
+  string id = 1;
+}
+
+message MsgUpdateWorker {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator     = 1;
+  string id          = 2;
+  string name        = 3;
+  string description = 4;
+  uint64 cpus        = 5;
+  uint64 gpus        = 6;
+  uint64 memory      = 7;
+  uint64 disk        = 8;
+  repeated Label labels = 9;
+  repeated string tags = 10;
+}
+
+message MsgUpdateWorkerResponse {}
+
+message MsgDeleteWorker {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string id      = 2;
+}
+
+message MsgDeleteWorkerResponse {}
+
+message MsgCreateTask {
+  option (cosmos.msg.v1.signer) = "creator";
+           string              creator        =   1;
+           string              image          =   2;
+  repeated string              command        =   3;
+  repeated string              args           =   4;
+  repeated TaskEnv             env            =   5;
+  repeated InputContext        inputContexts  =   6;
+  repeated OutputContext       outputContexts =   7;
+           uint64              cpus           =   8;
+           uint64              gpus           =   9;
+           uint64              memory         =  10;
+           uint64              time           =  11;
+           bool                storeStdout    =  12;
+           bool                storeStderr    =  13;
+  repeated string              tags           =  14;
+  repeated Label               labels         =  15;
+}
+
+message MsgCreateTaskResponse {
+  string id = 1;
+}
+
+message MsgDeleteTask {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string id      = 2;
+}
+
+message MsgDeleteTaskResponse {}
+
+message MsgCreateWorkflow {
+  option (cosmos.msg.v1.signer) = "creator";
+  string       creator = 1;
+  WorkflowSpec spec    = 3;
+}
+
+message MsgCreateWorkflowResponse {
+  string id = 1;
+}
+
+message MsgDeleteWorkflow {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string id   = 2;
+}
+
+message MsgDeleteWorkflowResponse {}
+
+message MsgCreateProof {
+  option (cosmos.msg.v1.signer) = "creator";
+           string creator         =  1;
+           map<string,string> labels = 2;
+           string proverImage     =  3;
+           string verifierImage   =  4;
+  repeated string proverCommand   =  5;
+  repeated string verifierCommand =  6;
+  repeated string proverEnv       =  7;
+  repeated string verifierEnv     =  8;
+  repeated string inputContexts   =  9;
+           uint64 cpus            = 10;
+           uint64 gpus            = 11;
+           uint64 memory          = 12;
+           uint64 time            = 13;
+}
+
+message MsgCreateProofResponse {
+  string id = 1;
+}
+
+message MsgDeleteProof {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string id      = 2;
+}
+
+message MsgDeleteProofResponse {}
+
+message MsgAnnounceWorkerExit {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator  = 1;
+  string workerId = 2;
+}
+
+message MsgAnnounceWorkerExitResponse {}
+
+message MsgCreatePin {
+  option (cosmos.msg.v1.signer) = "creator";
+           string              creator       =  1;
+           string              cid           =  2;
+           uint64              bytes         =  3;
+           uint64              time          =  4;
+           uint64              redundancy    =  5;
+           string              name          =  6;
+           string              description   =  7;
+  repeated string              tags          =  8;
+  repeated Label               labels        =  9;
+  repeated string              fallback_urls = 10;
+}
+
+message MsgCreatePinResponse {}
+
+message MsgDeletePin {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string cid     = 2;
+}
+
+message MsgDeletePinResponse {}
+
+message MsgAckPin {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator  = 1;
+  string workerId = 2;
+  string cid      = 3;
+}
+
+message MsgAckPinResponse {}
+
+message MsgAcceptTask {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator  = 1;
+  string workerId = 2;
+  string taskId   = 3;
+}
+
+message MsgAcceptTaskResponse {}
+
+message MsgDeclineTask {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator  = 1;
+  string workerId = 2;
+  string taskId   = 3;
+}
+
+message MsgDeclineTaskResponse {}
+
+message MsgFinishTask {
+  option (cosmos.msg.v1.signer) = "creator";
+           string creator        = 1;
+           string taskId         = 2;
+           int32  exitCode       = 3;
+           string stdout         = 4;
+           string stderr         = 5;
+  repeated string outputContexts = 6;
+           string error          = 7;
+}
+
+message MsgFinishTaskResponse {}
+

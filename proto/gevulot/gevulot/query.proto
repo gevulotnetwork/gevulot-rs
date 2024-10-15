@@ -1,0 +1,171 @@
+syntax = "proto3";
+
+package gevulot.gevulot;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gevulot/gevulot/params.proto";
+import "gevulot/gevulot/worker.proto";
+import "gevulot/gevulot/task.proto";
+import "gevulot/gevulot/workflow.proto";
+import "gevulot/gevulot/proof.proto";
+import "gevulot/gevulot/pin.proto";
+
+option go_package = "gevulot/x/gevulot/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  
+  // Parameters queries the parameters of the module.
+  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/gevulot/gevulot/params";
+  
+  }
+  
+  // Queries a list of Worker items.
+  rpc Worker    (QueryGetWorkerRequest) returns (QueryGetWorkerResponse) {
+    option (google.api.http).get = "/gevulot/gevulot/worker/{id}";
+  
+  }
+  rpc WorkerAll (QueryAllWorkerRequest) returns (QueryAllWorkerResponse) {
+    option (google.api.http).get = "/gevulot/gevulot/worker";
+  
+  }
+  
+  // Queries a list of Task items.
+  rpc Task    (QueryGetTaskRequest) returns (QueryGetTaskResponse) {
+    option (google.api.http).get = "/gevulot/gevulot/task/{id}";
+  
+  }
+  rpc TaskAll (QueryAllTaskRequest) returns (QueryAllTaskResponse) {
+    option (google.api.http).get = "/gevulot/gevulot/task";
+  
+  }
+  
+  // Queries a list of Workflow items.
+  rpc Workflow    (QueryGetWorkflowRequest) returns (QueryGetWorkflowResponse) {
+    option (google.api.http).get = "/gevulot/gevulot/workflow/{id}";
+  
+  }
+  rpc WorkflowAll (QueryAllWorkflowRequest) returns (QueryAllWorkflowResponse) {
+    option (google.api.http).get = "/gevulot/gevulot/workflow";
+  
+  }
+  
+  // Queries a list of Proof items.
+  rpc Proof    (QueryGetProofRequest) returns (QueryGetProofResponse) {
+    option (google.api.http).get = "/gevulot/gevulot/proof/{id}";
+  
+  }
+  rpc ProofAll (QueryAllProofRequest) returns (QueryAllProofResponse) {
+    option (google.api.http).get = "/gevulot/gevulot/proof";
+  
+  }
+  
+  // Queries a list of Pin items.
+  rpc Pin    (QueryGetPinRequest) returns (QueryGetPinResponse) {
+    option (google.api.http).get = "/gevulot/gevulot/pin/{cid}";
+  
+  }
+  rpc PinAll (QueryAllPinRequest) returns (QueryAllPinResponse) {
+    option (google.api.http).get = "/gevulot/gevulot/pin";
+  
+  }
+}
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+message QueryGetWorkerRequest {
+  string id = 1;
+}
+
+message QueryGetWorkerResponse {
+  Worker worker = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllWorkerRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllWorkerResponse {
+  repeated Worker                                 worker     = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetTaskRequest {
+  string id = 1;
+}
+
+message QueryGetTaskResponse {
+  Task task = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllTaskRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllTaskResponse {
+  repeated Task                                   task       = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetWorkflowRequest {
+  string id = 1;
+}
+
+message QueryGetWorkflowResponse {
+  Workflow workflow = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllWorkflowRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllWorkflowResponse {
+  repeated Workflow                               workflow   = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetProofRequest {
+  string id = 1;
+}
+
+message QueryGetProofResponse {
+  Proof proof = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllProofRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllProofResponse {
+  repeated Proof                                  proof      = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetPinRequest {
+  string cid = 1;
+}
+
+message QueryGetPinResponse {
+  Pin pin = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllPinRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllPinResponse {
+  repeated Pin                                    pin        = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+

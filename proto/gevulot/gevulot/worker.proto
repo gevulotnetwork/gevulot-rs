@@ -1,0 +1,28 @@
+syntax = "proto3";
+package gevulot.gevulot;
+
+option go_package = "gevulot/x/gevulot/types";
+
+import "gevulot/gevulot/metadata.proto";
+
+message Worker {
+  Metadata metadata = 1;
+  WorkerSpec spec = 3;
+  WorkerStatus status = 4;
+}
+
+message WorkerSpec {
+  uint64 cpus = 4;
+  uint64 gpus = 5;
+  uint64 memory = 6;
+  uint64 disk = 7;
+}
+
+message WorkerStatus {
+  uint64 cpusUsed = 1;
+  uint64 gpusUsed = 2;
+  uint64 memoryUsed = 3;
+  uint64 diskUsed = 4;
+  uint64 exitAnnouncedAt = 5;
+}
+

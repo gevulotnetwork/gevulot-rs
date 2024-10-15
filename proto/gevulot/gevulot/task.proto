@@ -1,0 +1,66 @@
+syntax = "proto3";
+package gevulot.gevulot;
+
+option go_package = "gevulot/x/gevulot/types";
+
+import "gevulot/gevulot/metadata.proto";
+import "gevulot/gevulot/util.proto";
+
+message Task {
+  Metadata metadata = 1;
+  TaskSpec spec = 2;
+  TaskStatus status = 3;
+}
+
+message TaskSpec {
+  string image = 1;
+  repeated string command = 2;
+  repeated string args = 3;
+  repeated TaskEnv env = 4;
+  repeated InputContext inputContexts = 5;
+  repeated OutputContext outputContexts = 6;
+  uint64 cpus = 7;
+  uint64 gpus = 8;
+  uint64 memory = 9;
+  uint64 time = 10;
+  bool storeStdout = 11;
+  bool storeStderr = 12;
+  string workflowRef = 13;
+}
+
+message TaskStatus {
+  // The state of the task
+  enum State {
+    PENDING = 0;
+    RUNNING = 1;
+    DECLINED = 2;
+    DONE = 3;
+    FAILED = 4;
+  }
+  State state = 1;
+  // The time that the task was created
+  uint64 createdAt = 2;
+  // The time that the task was started
+  uint64 startedAt = 3;
+  // The time that the task was completed
+  uint64 completedAt = 4;
+  // The list of assigned workers
+  repeated string assignedWorkers = 5;
+  // The worker that is currently running the task
+  string activeWorker = 6;
+  // exit code of the task
+  int64 exitCode = 7;
+  // The CID of stdout of the task
+  string stdout = 8;
+  // The CID of stderr of the task
+  string stderr = 9;
+  // The CIDs of the output contexts
+  repeated string outputContexts = 10;
+  // error message
+  string error = 11;
+}
+
+// A group of tasks, needed as a building block for the workflows
+message TaskGroup {
+  repeated Task tasks = 1;
+}

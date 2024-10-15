@@ -1,0 +1,30 @@
+syntax = "proto3";
+package gevulot.gevulot;
+
+option go_package = "gevulot/x/gevulot/types";
+
+message Proof {
+  string id = 1; 
+  string creator = 2;
+  ProofSpec spec = 3;
+  ProofStatus status = 4;
+}
+
+message ProofSpec {
+  string proverImage = 1; 
+  string verifierImage = 2; 
+  repeated string proverCommand = 3; 
+  repeated string verifierCommand = 4; 
+  repeated string proverEnv = 5; 
+  repeated string verifierEnv = 6; 
+  repeated string inputContexts = 7; 
+  uint64 cpus = 8;
+  uint64 gpus = 9;
+  uint64 memory = 10;
+  uint64 time = 11;
+}
+
+message ProofStatus {
+  // Add any status fields here if needed in the future
+}
+

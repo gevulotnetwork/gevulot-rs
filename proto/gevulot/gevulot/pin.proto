@@ -1,0 +1,29 @@
+syntax = "proto3";
+package gevulot.gevulot;
+
+import "gevulot/gevulot/metadata.proto";
+
+option go_package = "gevulot/x/gevulot/types";
+
+message Pin {
+  Metadata metadata = 1;
+  PinSpec spec = 2;
+  PinStatus status = 3;
+}
+
+message PinSpec {
+  uint64 bytes = 1; 
+  uint64 time = 2; 
+  uint64 redundancy = 3; 
+  repeated string fallbackUrls = 4;
+}
+
+message PinStatus {
+  repeated string assignedWorkers = 1;
+  repeated PinAck workerAcks = 2;
+}
+
+message PinAck {
+  string worker = 1;
+  uint64 blockHeight = 2;
+}

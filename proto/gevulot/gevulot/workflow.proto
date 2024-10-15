@@ -1,0 +1,38 @@
+syntax = "proto3";
+package gevulot.gevulot;
+
+option go_package = "gevulot/x/gevulot/types";
+import "gevulot/gevulot/task.proto"; 
+import "gevulot/gevulot/util.proto";
+
+message Workflow {
+  string id = 1; 
+  string creator = 2;
+  WorkflowSpec spec = 3; 
+  WorkflowStatus status = 4; 
+}
+
+message WorkflowSpec {
+  message Stage {
+    repeated TaskSpec tasks = 1;
+  }
+  repeated Stage stages = 1;
+  repeated Label labels = 2;
+}
+
+message WorkflowStatus {
+  enum State {
+    PENDING = 0;
+    RUNNING = 1;
+    SUCCEEDED = 2;
+    FAILED = 3;
+  }
+  State state = 1;
+  uint64 currentStage = 2;
+
+  message StageState {
+    repeated string taskIds = 1;
+    uint64 finishedTasks = 2;
+  }
+  repeated StageState stages = 3;
+}

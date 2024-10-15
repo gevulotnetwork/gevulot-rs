@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package gevulot.gevulot;
+
+option go_package = "gevulot/x/gevulot/types";
+
+message Label {
+  string key   = 1;
+  string value = 2;
+}
+
+message InputContext {
+  string source = 1;
+  string target = 2;
+}
+
+message OutputContext {
+  string source = 1;
+  uint64 retentionPeriod = 2;
+}
+
+message TaskEnv {
+  string name = 1;
+  string value = 2;
+}

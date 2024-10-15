@@ -1,0 +1,15 @@
+syntax = "proto3";
+package gevulot.gevulot;
+
+option go_package = "gevulot/x/gevulot/types";
+
+import "gevulot/gevulot/util.proto";
+
+message Metadata {
+  string id = 1;
+  string creator = 2;
+  string name = 3; 
+  string desc = 4; 
+  repeated string tags = 5;
+  repeated Label labels = 6;
+}

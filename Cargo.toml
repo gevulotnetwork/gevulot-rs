@@ -1,0 +1,36 @@
+[package]
+name = "gevulot-rs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "gevulot_rs"
+path = "src/lib.rs"
+
+[dependencies]
+cosmos-sdk-proto = "0.25"
+cosmrs = { version = "0.20", features = ["tokio", "grpc", "rpc", "tendermint-rpc"] }
+bip32 =  { version = "0.5.1", features = [ "mnemonic", "bip39" ] }
+derivative = "2"
+derive_builder = "0.20.0"
+hex = "0.4.3"
+http = "1.1.0"
+log = "0.4.22"
+pretty_env_logger = "0.5.0"
+prost = "0.13"
+rand = "0.8.5"
+rand_core = "0.6.4"
+serde = "1"
+serde_json = "1"
+tendermint = "0.39.1"
+thiserror = "1"
+tokio = { version = "1", features = ["full"] }
+tonic = { version = "0.12", features = ["tls"] }
+
+[dev-dependencies]
+pretty_env_logger = "0.5.0"
+
+[build-dependencies]
+prost-build = "0.12"
+tonic-buf-build = "0.2"
+tonic-build = "0.11"
