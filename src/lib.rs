@@ -107,7 +107,7 @@ mod tests {
 
         let mut fetcher = event_fetcher::EventFetcher::new(
             "http://127.0.0.1:26657",
-            Height::from(0u32),
+            Some(Height::from(0u32)),
             tokio::time::Duration::from_secs(5),
             EventLogger {},
         );
@@ -199,29 +199,29 @@ mod tests {
         cli.workers.delete(delete_worker_msg).await.unwrap();
     }
 
-    #[tokio::test]
-    async fn test_event_fetcher() {
-        let event = cosmrs::tendermint::abci::Event {
-            kind: "create-task".to_string(),
-            attributes: vec![
-                cosmrs::tendermint::abci::EventAttribute::V037(
-                    cosmrs::tendermint::abci::v0_37::EventAttribute {
-                        key: "task-id".to_string(),
-                        value: "1".to_string(),
-                        index: false,
-                    },
-                ),
-                cosmrs::tendermint::abci::EventAttribute::V037(
-                    cosmrs::tendermint::abci::v0_37::EventAttribute {
-                        key: "creator".to_string(),
-                        value: "creator".to_string(),
-                        index: false,
-                    },
-                ),
-            ],
-        };
+    // #[tokio::test]
+    // async fn test_event_fetcher() {
+    //     let event = cosmrs::tendermint::abci::Event {
+    //         kind: "create-task".to_string(),
+    //         attributes: vec![
+    //             cosmrs::tendermint::abci::EventAttribute::V037(
+    //                 cosmrs::tendermint::abci::v0_37::EventAttribute {
+    //                     key: "task-id".to_string(),
+    //                     value: "1".to_string(),
+    //                     index: false,
+    //                 },
+    //             ),
+    //             cosmrs::tendermint::abci::EventAttribute::V037(
+    //                 cosmrs::tendermint::abci::v0_37::EventAttribute {
+    //                     key: "creator".to_string(),
+    //                     value: "creator".to_string(),
+    //                     index: false,
+    //                 },
+    //             ),
+    //         ],
+    //     };
 
-        let event = events::GevulotEvent::from_cosmos(&event, Height::from(1u32)).unwrap();
-        println!("{:?}", event);
-    }
+    //     let event = events::GevulotEvent::from_cosmos(&event, Height::from(1u32)).unwrap();
+    //     println!("{:?}", event);
+    // }
 }

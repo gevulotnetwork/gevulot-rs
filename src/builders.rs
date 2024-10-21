@@ -357,8 +357,8 @@ impl MsgFinishTaskBuilder {
 
 #[derive(Builder)]
 pub struct MsgSudoDeletePin {
-    pub creator: String,
-    pub pin_id: String,
+    pub authority: String,
+    pub cid: String,
 }
 
 impl MsgSudoDeletePinBuilder {
@@ -367,16 +367,16 @@ impl MsgSudoDeletePinBuilder {
             .build()
             .map_err(|e| Error::EncodeError(e.to_string()))?;
         Ok(gevulot::MsgSudoDeletePin {
-            creator: msg.creator,
-            pin_id: msg.pin_id,
+            authority: msg.authority,
+            cid: msg.cid,
         })
     }
 }
 
 #[derive(Builder)]
 pub struct MsgSudoDeleteWorker {
-    pub creator: String,
-    pub worker_id: String,
+    pub authority: String,
+    pub id: String,
 }
 
 impl MsgSudoDeleteWorkerBuilder {
@@ -385,16 +385,16 @@ impl MsgSudoDeleteWorkerBuilder {
             .build()
             .map_err(|e| Error::EncodeError(e.to_string()))?;
         Ok(gevulot::MsgSudoDeleteWorker {
-            creator: msg.creator,
-            worker_id: msg.worker_id,
+            authority: msg.authority,
+            id: msg.id,
         })
     }
 }
 
 #[derive(Builder)]
 pub struct MsgSudoDeleteTask {
-    pub creator: String,
-    pub task_id: String,
+    pub authority: String,
+    pub id: String,
 }
 
 impl MsgSudoDeleteTaskBuilder {
@@ -403,16 +403,16 @@ impl MsgSudoDeleteTaskBuilder {
             .build()
             .map_err(|e| Error::EncodeError(e.to_string()))?;
         Ok(gevulot::MsgSudoDeleteTask {
-            creator: msg.creator,
-            task_id: msg.task_id,
+            authority: msg.authority,
+            id: msg.id,
         })
     }
 }
 
 #[derive(Builder)]
 pub struct MsgSudoFreezeAccount {
-    pub creator: String,
-    pub address: String,
+    pub authority: String,
+    pub account: String,
 }
 
 impl MsgSudoFreezeAccountBuilder {
@@ -421,8 +421,8 @@ impl MsgSudoFreezeAccountBuilder {
             .build()
             .map_err(|e| Error::EncodeError(e.to_string()))?;
         Ok(gevulot::MsgSudoFreezeAccount {
-            creator: msg.creator,
-            address: msg.address,
+            authority: msg.authority,
+            account: msg.account,
         })
     }
 }
