@@ -39,19 +39,44 @@ service Msg {
   rpc AcceptTask         (MsgAcceptTask        ) returns (MsgAcceptTaskResponse        );
   rpc DeclineTask        (MsgDeclineTask       ) returns (MsgDeclineTaskResponse       );
   rpc FinishTask         (MsgFinishTask        ) returns (MsgFinishTaskResponse        );
-  rpc SudoDeleteWorker   (MsgDeleteWorker      ) returns (MsgDeleteWorkerResponse      );
-  rpc SudoDeletePin      (MsgDeletePin         ) returns (MsgDeletePinResponse         );
-  rpc SudoDeleteTask     (MsgDeleteTask        ) returns (MsgDeleteTaskResponse        );
-  rpc SudoFreezeAccount   (MsgFreezeAccount     ) returns (MsgFreezeAccountResponse     );
+  rpc SudoDeleteWorker   (MsgSudoDeleteWorker   ) returns (MsgSudoDeleteWorkerResponse   );
+  rpc SudoDeletePin      (MsgSudoDeletePin      ) returns (MsgSudoDeletePinResponse      );
+  rpc SudoDeleteTask     (MsgSudoDeleteTask     ) returns (MsgSudoDeleteTaskResponse     );
+  rpc SudoFreezeAccount   (MsgSudoFreezeAccount  ) returns (MsgSudoFreezeAccountResponse  );
 }
 
-message MsgFreezeAccount {
+message MsgSudoFreezeAccount {
   option (cosmos.msg.v1.signer) = "authority";
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string account = 2;
 }
 
-message MsgFreezeAccountResponse {}
+message MsgSudoFreezeAccountResponse {}
+
+message MsgSudoDeleteWorker {
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string id = 2;
+}
+
+message MsgSudoDeleteWorkerResponse {}
+
+message MsgSudoDeletePin {
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string cid = 2;
+}
+
+message MsgSudoDeletePinResponse {}
+
+message MsgSudoDeleteTask {
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string id = 2;
+}
+
+message MsgSudoDeleteTaskResponse {}
+
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
