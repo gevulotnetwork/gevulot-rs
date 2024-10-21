@@ -4,7 +4,7 @@ use crate::gov_client::GovClient;
 use crate::pin_client::PinClient;
 use crate::task_client::TaskClient;
 use crate::worker_client::WorkerClient;
-
+use crate::sudo_client::SudoClient;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -19,7 +19,7 @@ pub struct GevulotClient {
     pub tasks: TaskClient,
     pub workers: WorkerClient,
     pub gov: GovClient,
-
+    pub sudo: SudoClient,
     // raw access to base functionality so we don't lock out ourselves
     pub base_client: Arc<RwLock<BaseClient>>,
 }
@@ -103,6 +103,7 @@ impl GevulotClientBuilder {
             tasks: TaskClient::new(base_client.clone()),
             workers: WorkerClient::new(base_client.clone()),
             gov: GovClient::new(base_client.clone()),
+            sudo: SudoClient::new(base_client.clone()),
             base_client,
         })
     }
