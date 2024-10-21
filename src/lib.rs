@@ -12,6 +12,8 @@ pub mod task_client;
 pub mod worker_client;
 /// This module contains the client implementation for managing workflows.
 pub mod workflow_client;
+/// This module contains the client implementation for sudo functionality.
+pub mod sudo_client;
 
 pub mod models;
 

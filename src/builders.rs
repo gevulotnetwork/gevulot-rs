@@ -354,3 +354,75 @@ impl MsgFinishTaskBuilder {
         })
     }
 }
+
+#[derive(Builder)]
+pub struct MsgSudoDeletePin {
+    pub creator: String,
+    pub pin_id: String,
+}
+
+impl MsgSudoDeletePinBuilder {
+    pub fn into_message(&self) -> Result<gevulot::MsgSudoDeletePin> {
+        let msg = self
+            .build()
+            .map_err(|e| Error::EncodeError(e.to_string()))?;
+        Ok(gevulot::MsgSudoDeletePin {
+            creator: msg.creator,
+            pin_id: msg.pin_id,
+        })
+    }
+}
+
+#[derive(Builder)]
+pub struct MsgSudoDeleteWorker {
+    pub creator: String,
+    pub worker_id: String,
+}
+
+impl MsgSudoDeleteWorkerBuilder {
+    pub fn into_message(&self) -> Result<gevulot::MsgSudoDeleteWorker> {
+        let msg = self
+            .build()
+            .map_err(|e| Error::EncodeError(e.to_string()))?;
+        Ok(gevulot::MsgSudoDeleteWorker {
+            creator: msg.creator,
+            worker_id: msg.worker_id,
+        })
+    }
+}
+
+#[derive(Builder)]
+pub struct MsgSudoDeleteTask {
+    pub creator: String,
+    pub task_id: String,
+}
+
+impl MsgSudoDeleteTaskBuilder {
+    pub fn into_message(&self) -> Result<gevulot::MsgSudoDeleteTask> {
+        let msg = self
+            .build()
+            .map_err(|e| Error::EncodeError(e.to_string()))?;
+        Ok(gevulot::MsgSudoDeleteTask {
+            creator: msg.creator,
+            task_id: msg.task_id,
+        })
+    }
+}
+
+#[derive(Builder)]
+pub struct MsgSudoFreezeAccount {
+    pub creator: String,
+    pub address: String,
+}
+
+impl MsgSudoFreezeAccountBuilder {
+    pub fn into_message(&self) -> Result<gevulot::MsgSudoFreezeAccount> {
+        let msg = self
+            .build()
+            .map_err(|e| Error::EncodeError(e.to_string()))?;
+        Ok(gevulot::MsgSudoFreezeAccount {
+            creator: msg.creator,
+            address: msg.address,
+        })
+    }
+}

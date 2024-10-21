@@ -324,7 +324,14 @@ impl BaseClient {
 
         let resp = resp.into_inner();
         log::debug!("broadcast_tx response: {:#?}", resp);
-        let hash = resp.tx_response.ok_or("Tx response not found")?.txhash;
+        let tx_response = resp.tx_response.ok_or("Tx response not found")?;
+        if tx_response.code != 0 {
+            return Err(Error::Unknown(format!(
+                "Transaction failed with code: {}",
+                tx_response.code
+            )));
+        }
+        let hash = tx_response.txhash;
         Ok(hash)
     }
 
