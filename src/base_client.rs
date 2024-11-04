@@ -3,7 +3,7 @@ use cosmos_sdk_proto::cosmos::tx::v1beta1::{SimulateResponse, Tx};
 use cosmos_sdk_proto::prost::{Message, Name};
 use cosmos_sdk_proto::tendermint::types::Block;
 use cosmrs::{auth::BaseAccount, Coin};
-use tonic::transport::Channel;
+use tonic::transport::{Channel, ClientTlsConfig};
 
 use crate::error::{Error, Result};
 use crate::signer::GevulotSigner;
@@ -66,6 +66,8 @@ impl BaseClient {
         // Attempt to create a channel with retries and exponential backoff
         let channel = loop {
             match Channel::from_shared(endpoint.to_owned())
+                .map_err(|e| crate::error::Error::RpcConnectionError(e.to_string()))?
+                .tls_config(ClientTlsConfig::new().with_native_roots())
                 .map_err(|e| crate::error::Error::RpcConnectionError(e.to_string()))?
                 .connect()
                 .await
