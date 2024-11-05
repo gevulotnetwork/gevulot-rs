@@ -16,6 +16,7 @@ pub mod workflow_client;
 pub mod sudo_client;
 
 pub mod models;
+pub mod runtime_config;
 
 pub mod error;
 pub mod event_fetcher;

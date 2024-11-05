@@ -745,6 +745,7 @@ dependencies = [
  "rand_core",
  "serde",
  "serde_json",
+ "serde_yaml",
  "tendermint",
  "thiserror",
  "tokio",
