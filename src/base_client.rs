@@ -356,14 +356,16 @@ impl BaseClient {
         let hash = self.send_msg(msg, memo).await?;
         self.wait_for_tx(&hash, Some(tokio::time::Duration::from_secs(10)))
             .await?;
-        let tx_response: TxResponse = self.get_tx_response(&hash).await.unwrap();
+        let tx_response: TxResponse = self.get_tx_response(&hash).await?;
         let tx_msg_data = cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxMsgData::decode(
-            &*hex::decode(tx_response.data).unwrap(),
-        )
-        .unwrap();
-        let msg_response = &tx_msg_data.msg_responses[0];
-        let result = R::decode(&msg_response.value[..]).unwrap();
-        Ok(result)
+            &*hex::decode(tx_response.data)?,
+        )?;
+        if tx_msg_data.msg_responses.is_empty() {
+            Err(Error::Unknown("no response message".to_string()))
+        } else {
+            let msg_response = &tx_msg_data.msg_responses[0];
+            Ok(R::decode(&msg_response.value[..])?)
+        }
     }
 
     /// Retrieves the latest block from the blockchain.
