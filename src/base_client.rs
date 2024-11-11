@@ -322,18 +322,18 @@ impl BaseClient {
             mode: 2, // BROADCAST_MODE_SYNC -> Wait for the tx to be processed, but not in-block
         };
         let resp = self.tx_client.broadcast_tx(request).await?;
-        self.account_sequence = Some(sequence + 1);
-
         let resp = resp.into_inner();
         log::debug!("broadcast_tx response: {:#?}", resp);
         let tx_response = resp.tx_response.ok_or("Tx response not found")?;
         if tx_response.code != 0 {
             return Err(Error::Unknown(format!(
                 "Transaction failed with code: {} ({})",
-                tx_response.code,
-                tx_response.raw_log
+                tx_response.code, tx_response.raw_log
             )));
         }
+
+        // Bump up the local account sequence after successful tx.
+        self.account_sequence = Some(sequence + 1);
         let hash = tx_response.txhash;
         Ok(hash)
     }
