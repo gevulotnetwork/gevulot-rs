@@ -358,6 +358,8 @@ pub struct TaskStatus {
     pub exit_code: i64,
     #[serde(rename = "outputContexts")]
     pub output_contexts: Vec<String>,
+    pub stdout: Option<String>,
+    pub stderr: Option<String>,
     pub error: String,
 }
 
@@ -380,6 +382,16 @@ impl From<gevulot::TaskStatus> for TaskStatus {
             exit_code: proto.exit_code,
             output_contexts: proto.output_contexts,
             error: proto.error,
+            stdout: if proto.stdout.is_empty() {
+                None
+            } else {
+                Some(proto.stdout)
+            },
+            stderr: if proto.stderr.is_empty() {
+                None
+            } else {
+                Some(proto.stderr)
+            },
         }
     }
 }
