@@ -203,7 +203,7 @@ impl BaseClient {
 
         log::debug!("token transfer msg: {:?}", msg);
 
-        self.send_msg_sync(msg, "token transfer").await?;
+        self.send_msg_sync::<_, ()>(msg, "token transfer").await?;
 
         Ok(())
     }
