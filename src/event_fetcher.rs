@@ -105,12 +105,25 @@ where
     }
 
     async fn process_block_results(&mut self, block_results: &BlockResults) -> Result<()> {
+        if let Some(events) = &block_results.begin_block_events {
+            for event in events.iter() {
+                self.handler.handle_event(event, block_results.height).await?;
+            }
+        }
         if let Some(txs_results) = &block_results.txs_results {
             for event in txs_results.iter().flat_map(|tx| tx.events.iter()) {
                 self.handler
                     .handle_event(event, block_results.height)
                     .await?;
             }
+        }
+        if let Some(events) = &block_results.end_block_events {
+            for event in events.iter() {
+                self.handler.handle_event(event, block_results.height).await?;
+            }
+        }
+        for event in block_results.finalize_block_events.iter() {
+            self.handler.handle_event(event, block_results.height).await?;
         }
         Ok(())
     }
