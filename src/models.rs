@@ -397,6 +397,110 @@ impl From<gevulot::TaskStatus> for TaskStatus {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct Workflow {
+    pub kind: String,
+    pub version: String,
+    pub metadata: Metadata,
+    pub spec: WorkflowSpec,
+    pub status: Option<WorkflowStatus>,
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct WorkflowStage {
+    pub tasks: Vec<TaskSpec>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct WorkflowSpec {
+    pub stages: Vec<WorkflowStage>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct WorkflowStageStatus {
+    pub task_ids: Vec<String>,
+    pub finished_tasks: u64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct WorkflowStatus {
+    pub state: String,
+    pub current_stage: u64,
+    pub stages: Vec<WorkflowStageStatus>,
+}
+
+impl From<gevulot::Workflow> for Workflow {
+    fn from(proto: gevulot::Workflow) -> Self {
+        Workflow {
+            kind: "Workflow".to_string(),
+            version: "v0".to_string(),
+            metadata: Metadata {
+                id: proto.metadata.as_ref().map(|m| m.id.clone()),
+                name: proto
+                    .metadata
+                    .as_ref()
+                    .map(|m| m.name.clone())
+                    .unwrap_or_default(),
+                creator: proto.metadata.as_ref().map(|m| m.creator.clone()),
+                description: proto
+                    .metadata
+                    .as_ref()
+                    .map(|m| m.desc.clone())
+                    .unwrap_or_default(),
+                tags: proto
+                    .metadata
+                    .as_ref()
+                    .map(|m| m.tags.clone())
+                    .unwrap_or_default(),
+                labels: proto
+                    .metadata
+                    .as_ref()
+                    .map(|m| m.labels.clone())
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|l| Label {
+                        key: l.key,
+                        value: l.value,
+                    })
+                    .collect(),
+                workflow_ref: None,
+            },
+            spec: proto.spec.map(|s| s.into()).unwrap(),
+            status: proto.status.map(|s| s.into()),
+        }
+    }
+}
+
+impl From<gevulot::WorkflowSpec> for WorkflowSpec {
+    fn from(proto: gevulot::WorkflowSpec) -> Self {
+        WorkflowSpec {
+            stages: proto.stages.into_iter().map(|stage| WorkflowStage {
+                tasks: stage.tasks.into_iter().map(|t| t.into()).collect(),
+            }).collect(),
+        }
+    }
+}
+
+impl From<gevulot::WorkflowStatus> for WorkflowStatus {
+    fn from(proto: gevulot::WorkflowStatus) -> Self {
+        WorkflowStatus {
+            state: match proto.state {
+                0 => "Pending".to_string(),
+                1 => "Running".to_string(),
+                2 => "Done".to_string(),
+                3 => "Failed".to_string(),
+                _ => "Unknown".to_string(),
+            },
+            current_stage: proto.current_stage,
+            stages: proto.stages.into_iter().map(|s| WorkflowStageStatus {
+                task_ids: s.task_ids,
+                finished_tasks: s.finished_tasks,
+            }).collect(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Metadata {
     pub id: Option<String>,
     pub name: String,
