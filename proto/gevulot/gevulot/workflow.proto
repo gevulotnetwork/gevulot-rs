@@ -1,15 +1,16 @@
 syntax = "proto3";
 package gevulot.gevulot;
 
+import "gevulot/gevulot/metadata.proto";
+
 option go_package = "gevulot/x/gevulot/types";
 import "gevulot/gevulot/task.proto"; 
 import "gevulot/gevulot/util.proto";
 
 message Workflow {
-  string id = 1; 
-  string creator = 2;
-  WorkflowSpec spec = 3; 
-  WorkflowStatus status = 4; 
+  Metadata metadata = 1;
+  WorkflowSpec spec = 2;
+  WorkflowStatus status = 3;
 }
 
 message WorkflowSpec {
@@ -17,7 +18,6 @@ message WorkflowSpec {
     repeated TaskSpec tasks = 1;
   }
   repeated Stage stages = 1;
-  repeated Label labels = 2;
 }
 
 message WorkflowStatus {

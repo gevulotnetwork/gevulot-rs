@@ -60,7 +60,3 @@ message TaskStatus {
   string error = 11;
 }
 
-// A group of tasks, needed as a building block for the workflows
-message TaskGroup {
-  repeated Task tasks = 1;
-}
