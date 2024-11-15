@@ -24,7 +24,7 @@ message WorkflowStatus {
   enum State {
     PENDING = 0;
     RUNNING = 1;
-    SUCCEEDED = 2;
+    DONE = 2;
     FAILED = 3;
   }
   State state = 1;
