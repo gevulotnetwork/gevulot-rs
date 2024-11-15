@@ -303,10 +303,10 @@ impl From<gevulot::TaskSpec> for TaskSpec {
                 })
                 .collect(),
             resources: TaskResources {
-                cpus: proto.cpus as i64,
-                gpus: proto.gpus as i64,
-                memory: proto.memory as i64,
-                time: proto.time as i64,
+                cpus: proto.cpus,
+                gpus: proto.gpus,
+                memory: proto.memory,
+                time: proto.time,
             },
             store_stdout: Some(proto.store_stdout),
             store_stderr: Some(proto.store_stderr),
@@ -335,10 +335,10 @@ pub struct OutputContext {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TaskResources {
-    pub cpus: i64,
-    pub gpus: i64,
-    pub memory: i64,
-    pub time: i64,
+    pub cpus: u64,
+    pub gpus: u64,
+    pub memory: u64,
+    pub time: u64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
