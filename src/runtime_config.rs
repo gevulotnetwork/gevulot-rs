@@ -44,7 +44,7 @@ use serde::{Deserialize, Serialize};
 pub const VERSION: &str = "1";
 
 /// Environment variable definition.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct EnvVar {
     pub key: String,
     pub value: String,
@@ -187,7 +187,7 @@ pub struct RuntimeConfig {
 
 #[cfg(test)]
 mod tests {
-    use super::{DebugExit, RuntimeConfig};
+    use super::{DebugExit, EnvVar, RuntimeConfig};
 
     #[test]
     fn test_deserialize_version_ok() {
@@ -259,8 +259,13 @@ mod tests {
         );
         assert_eq!(result.args, vec!["--log".to_string(), "info".to_string()]);
         assert_eq!(result.env.len(), 1);
-        assert_eq!(result.env[0].key, "TMPDIR".to_string());
-        assert_eq!(result.env[0].value, "/tmp".to_string());
+        assert_eq!(
+            result.env[0],
+            EnvVar {
+                key: "TMPDIR".to_string(),
+                value: "/tmp".to_string()
+            }
+        );
         assert_eq!(
             &result.working_dir.expect("working dir should be present"),
             "/"
