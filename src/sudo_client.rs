@@ -5,10 +5,9 @@ use crate::{
     base_client::BaseClient,
     error::Result,
     proto::gevulot::gevulot::{
-        MsgSudoDeletePin, MsgSudoDeletePinResponse,
-        MsgSudoDeleteWorker, MsgSudoDeleteWorkerResponse,
-        MsgSudoDeleteTask, MsgSudoDeleteTaskResponse,
-        MsgSudoFreezeAccount, MsgSudoFreezeAccountResponse,
+        MsgSudoDeletePin, MsgSudoDeletePinResponse, MsgSudoDeleteTask, MsgSudoDeleteTaskResponse,
+        MsgSudoDeleteWorker, MsgSudoDeleteWorkerResponse, MsgSudoFreezeAccount,
+        MsgSudoFreezeAccountResponse,
     },
 };
 
@@ -68,7 +67,10 @@ impl SudoClient {
     /// # Errors
     ///
     /// This function will return an error if the request to the Gevulot client fails.
-    pub async fn delete_worker(&mut self, msg: MsgSudoDeleteWorker) -> Result<MsgSudoDeleteWorkerResponse> {
+    pub async fn delete_worker(
+        &mut self,
+        msg: MsgSudoDeleteWorker,
+    ) -> Result<MsgSudoDeleteWorkerResponse> {
         let resp: MsgSudoDeleteWorkerResponse = self
             .base_client
             .write()
@@ -91,7 +93,10 @@ impl SudoClient {
     /// # Errors
     ///
     /// This function will return an error if the request to the Gevulot client fails.
-    pub async fn delete_task(&mut self, msg: MsgSudoDeleteTask) -> Result<MsgSudoDeleteTaskResponse> {
+    pub async fn delete_task(
+        &mut self,
+        msg: MsgSudoDeleteTask,
+    ) -> Result<MsgSudoDeleteTaskResponse> {
         let resp: MsgSudoDeleteTaskResponse = self
             .base_client
             .write()
@@ -114,7 +119,10 @@ impl SudoClient {
     /// # Errors
     ///
     /// This function will return an error if the request to the Gevulot client fails.
-    pub async fn freeze_account(&mut self, msg: MsgSudoFreezeAccount) -> Result<MsgSudoFreezeAccountResponse> {
+    pub async fn freeze_account(
+        &mut self,
+        msg: MsgSudoFreezeAccount,
+    ) -> Result<MsgSudoFreezeAccountResponse> {
         let resp: MsgSudoFreezeAccountResponse = self
             .base_client
             .write()

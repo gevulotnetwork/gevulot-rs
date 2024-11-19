@@ -139,7 +139,11 @@ impl GevulotEvent {
                     .filter(|attr| attr.key_bytes() == b"assigned-workers")
                     .flat_map(|attr| {
                         attr.value_str()
-                            .map(|s| s.split(',').map(|x| x.trim().to_string()).collect::<Vec<_>>())
+                            .map(|s| {
+                                s.split(',')
+                                    .map(|x| x.trim().to_string())
+                                    .collect::<Vec<_>>()
+                            })
                             .unwrap_or_default()
                     })
                     .collect::<Vec<String>>();
@@ -389,7 +393,11 @@ impl GevulotEvent {
                     .filter(|attr| attr.key_bytes() == b"assigned-workers")
                     .flat_map(|attr| {
                         attr.value_str()
-                            .map(|s| s.split(',').map(|x| x.trim().to_string()).collect::<Vec<_>>())
+                            .map(|s| {
+                                s.split(',')
+                                    .map(|x| x.trim().to_string())
+                                    .collect::<Vec<_>>()
+                            })
                             .unwrap_or_default()
                     })
                     .collect::<Vec<String>>();
@@ -407,11 +415,15 @@ impl GevulotEvent {
                     .filter(|attr| attr.key_bytes() == b"fallback-urls")
                     .flat_map(|attr| {
                         attr.value_str()
-                            .map(|s| s.split(',').map(|x| x.trim().to_string()).collect::<Vec<_>>())
+                            .map(|s| {
+                                s.split(',')
+                                    .map(|x| x.trim().to_string())
+                                    .collect::<Vec<_>>()
+                            })
                             .unwrap_or_default()
                     })
                     .collect::<Vec<String>>();
-                
+
                 Ok(GevulotEvent::Pin(PinEvent::Create(PinCreateEvent {
                     block_height,
                     cid,
@@ -633,328 +645,600 @@ mod tests {
 
     use super::*;
     use cosmrs::{rpc::dialect::v0_34::EventAttribute, tendermint::abci::Event};
-    
+
     #[test]
     fn test_from_cosmos_create_pin() {
-        let event = Event::new("create-pin", vec![
-            EventAttribute{index: true, key: b"cid".to_vec(), value: b"QmYwMXeEc3Z64vqcPXx8p8Y8Y5tE9Y5sYW42FZ1U87Y".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-            EventAttribute{index: true, key: b"assigned-workers".to_vec(), value: b"1,2,3".to_vec()},
-            EventAttribute{index: true, key: b"retention-period".to_vec(), value: b"86400".to_vec()},
-            EventAttribute{index: true, key: b"fallback-urls".to_vec(), value: b"https://example1.com,https://example2.org".to_vec()},
-            EventAttribute{index: true, key: b"fallback-urls".to_vec(), value: b"https://example3.com".to_vec()},
-        ]);
-    
-        
+        let event = Event::new(
+            "create-pin",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"cid".to_vec(),
+                    value: b"QmYwMXeEc3Z64vqcPXx8p8Y8Y5tE9Y5sYW42FZ1U87Y".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"assigned-workers".to_vec(),
+                    value: b"1,2,3".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"retention-period".to_vec(),
+                    value: b"86400".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"fallback-urls".to_vec(),
+                    value: b"https://example1.com,https://example2.org".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"fallback-urls".to_vec(),
+                    value: b"https://example3.com".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Pin(PinEvent::Create(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.cid, "QmYwMXeEc3Z64vqcPXx8p8Y8Y5tE9Y5sYW42FZ1U87Y");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
             assert_eq!(event.assigned_workers, vec!["1", "2", "3"]);
             assert_eq!(event.retention_period, 86400);
-            assert_eq!(event.fallback_urls, vec!["https://example1.com", "https://example2.org", "https://example3.com"]);
+            assert_eq!(
+                event.fallback_urls,
+                vec![
+                    "https://example1.com",
+                    "https://example2.org",
+                    "https://example3.com"
+                ]
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_delete_pin() {
-        let event = Event::new("delete-pin", vec![
-            EventAttribute{index: true, key: b"cid".to_vec(), value: b"QmYwMXeEc3Z64vqcPXx8p8Y8Y5tE9Y5sYW42FZ1U87Y".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-        ]);
-    
+        let event = Event::new(
+            "delete-pin",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"cid".to_vec(),
+                    value: b"QmYwMXeEc3Z64vqcPXx8p8Y8Y5tE9Y5sYW42FZ1U87Y".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Pin(PinEvent::Delete(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.cid, "QmYwMXeEc3Z64vqcPXx8p8Y8Y5tE9Y5sYW42FZ1U87Y");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_ack_pin() {
-        let event = Event::new("ack-pin", vec![
-            EventAttribute{index: true, key: b"cid".to_vec(), value: b"QmYwMXeEc3Z64vqcPXx8p8Y8Y5tE9Y5sYW42FZ1U87Y".to_vec()},
-            EventAttribute{index: true, key: b"worker-id".to_vec(), value: b"worker1".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-        ]);
-    
+        let event = Event::new(
+            "ack-pin",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"cid".to_vec(),
+                    value: b"QmYwMXeEc3Z64vqcPXx8p8Y8Y5tE9Y5sYW42FZ1U87Y".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"worker-id".to_vec(),
+                    value: b"worker1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Pin(PinEvent::Ack(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.cid, "QmYwMXeEc3Z64vqcPXx8p8Y8Y5tE9Y5sYW42FZ1U87Y");
             assert_eq!(event.worker_id, "worker1");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_create_worker() {
-        let event = Event::new("create-worker", vec![
-            EventAttribute{index: true, key: b"worker-id".to_vec(), value: b"worker1".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-        ]);
-    
+        let event = Event::new(
+            "create-worker",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"worker-id".to_vec(),
+                    value: b"worker1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Worker(WorkerEvent::Create(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.worker_id, "worker1");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_update_worker() {
-        let event = Event::new("update-worker", vec![
-            EventAttribute{index: true, key: b"worker-id".to_vec(), value: b"worker1".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-        ]);
-    
+        let event = Event::new(
+            "update-worker",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"worker-id".to_vec(),
+                    value: b"worker1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Worker(WorkerEvent::Update(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.worker_id, "worker1");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_delete_worker() {
-        let event = Event::new("delete-worker", vec![
-            EventAttribute{index: true, key: b"worker-id".to_vec(), value: b"worker1".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-        ]);
-    
+        let event = Event::new(
+            "delete-worker",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"worker-id".to_vec(),
+                    value: b"worker1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Worker(WorkerEvent::Delete(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.worker_id, "worker1");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_announce_worker_exit() {
-        let event = Event::new("announce-worker-exit", vec![
-            EventAttribute{index: true, key: b"worker-id".to_vec(), value: b"worker1".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-        ]);
-    
+        let event = Event::new(
+            "announce-worker-exit",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"worker-id".to_vec(),
+                    value: b"worker1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Worker(WorkerEvent::AnnounceExit(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.worker_id, "worker1");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_create_task() {
-        let event = Event::new("create-task", vec![
-            EventAttribute{index: true, key: b"task-id".to_vec(), value: b"task1".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-            EventAttribute{index: true, key: b"assigned-workers".to_vec(), value: b"worker1,worker2".to_vec()},
-            EventAttribute{index: true, key: b"assigned-workers".to_vec(), value: b"worker3".to_vec()},
-            
-        ]);
-    
+        let event = Event::new(
+            "create-task",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"task-id".to_vec(),
+                    value: b"task1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"assigned-workers".to_vec(),
+                    value: b"worker1,worker2".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"assigned-workers".to_vec(),
+                    value: b"worker3".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Task(TaskEvent::Create(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.task_id, "task1");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
-            assert_eq!(event.assigned_workers, vec!["worker1", "worker2", "worker3"]);
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
+            assert_eq!(
+                event.assigned_workers,
+                vec!["worker1", "worker2", "worker3"]
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_delete_task() {
-        let event = Event::new("delete-task", vec![
-            EventAttribute{index: true, key: b"task-id".to_vec(), value: b"task1".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-        ]);
-    
+        let event = Event::new(
+            "delete-task",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"task-id".to_vec(),
+                    value: b"task1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Task(TaskEvent::Delete(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.task_id, "task1");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_finish_task() {
-        let event = Event::new("finish-task", vec![
-            EventAttribute{index: true, key: b"task-id".to_vec(), value: b"task1".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-            EventAttribute{index: true, key: b"worker-id".to_vec(), value: b"worker1".to_vec()},
-        ]);
-    
+        let event = Event::new(
+            "finish-task",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"task-id".to_vec(),
+                    value: b"task1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"worker-id".to_vec(),
+                    value: b"worker1".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Task(TaskEvent::Finish(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.task_id, "task1");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
             assert_eq!(event.worker_id, "worker1");
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_create_workflow() {
-        let event = Event::new("create-workflow", vec![
-            EventAttribute{index: true, key: b"workflow-id".to_vec(), value: b"workflow1".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-        ]);
-    
+        let event = Event::new(
+            "create-workflow",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"workflow-id".to_vec(),
+                    value: b"workflow1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Workflow(WorkflowEvent::Create(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.workflow_id, "workflow1");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_delete_workflow() {
-        let event = Event::new("delete-workflow", vec![
-            EventAttribute{index: true, key: b"workflow-id".to_vec(), value: b"workflow1".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-        ]);
-    
+        let event = Event::new(
+            "delete-workflow",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"workflow-id".to_vec(),
+                    value: b"workflow1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Workflow(WorkflowEvent::Delete(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.workflow_id, "workflow1");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_progress_workflow() {
-        let event = Event::new("progress-workflow", vec![
-            EventAttribute{index: true, key: b"workflow-id".to_vec(), value: b"workflow1".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-        ]);
-    
+        let event = Event::new(
+            "progress-workflow",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"workflow-id".to_vec(),
+                    value: b"workflow1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Workflow(WorkflowEvent::Progress(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.workflow_id, "workflow1");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_finish_workflow() {
-        let event = Event::new("finish-workflow", vec![
-            EventAttribute{index: true, key: b"workflow-id".to_vec(), value: b"workflow1".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-        ]);
-    
+        let event = Event::new(
+            "finish-workflow",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"workflow-id".to_vec(),
+                    value: b"workflow1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Workflow(WorkflowEvent::Finish(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.workflow_id, "workflow1");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_accept_task() {
-        let event = Event::new("accept-task", vec![
-            EventAttribute{index: true, key: b"task-id".to_vec(), value: b"task1".to_vec()},
-            EventAttribute{index: true, key: b"worker-id".to_vec(), value: b"worker1".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-        ]);
-    
+        let event = Event::new(
+            "accept-task",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"task-id".to_vec(),
+                    value: b"task1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"worker-id".to_vec(),
+                    value: b"worker1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Task(TaskEvent::Accept(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.task_id, "task1");
             assert_eq!(event.worker_id, "worker1");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 
     #[test]
     fn test_from_cosmos_decline_task() {
-        let event = Event::new("decline-task", vec![
-            EventAttribute{index: true, key: b"task-id".to_vec(), value: b"task1".to_vec()},
-            EventAttribute{index: true, key: b"worker-id".to_vec(), value: b"worker1".to_vec()},
-            EventAttribute{index: true, key: b"creator".to_vec(), value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec()},
-        ]);
-    
+        let event = Event::new(
+            "decline-task",
+            vec![
+                EventAttribute {
+                    index: true,
+                    key: b"task-id".to_vec(),
+                    value: b"task1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"worker-id".to_vec(),
+                    value: b"worker1".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"creator".to_vec(),
+                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                },
+            ],
+        );
+
         let parsed = GevulotEvent::from_cosmos(&event, Height::from(1000u32));
-        
+
         assert!(parsed.is_ok());
         if let Ok(GevulotEvent::Task(TaskEvent::Decline(event))) = parsed {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.task_id, "task1");
             assert_eq!(event.worker_id, "worker1");
-            assert_eq!(event.creator, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh");
+            assert_eq!(
+                event.creator,
+                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
+            );
         } else {
             panic!("Unexpected event type");
-        }        
+        }
     }
 }

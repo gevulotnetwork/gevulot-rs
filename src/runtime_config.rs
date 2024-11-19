@@ -190,6 +190,7 @@ mod tests {
     }
 
     const EXAMPLE_CONFIG: &str = "
+    version: 1
     working-dir: /
     command: prover
     args: [--log, info]
@@ -213,7 +214,7 @@ mod tests {
             .expect("deserialization should succeed");
         assert_eq!(
             &result.command.expect("command should be present"),
-            "/prover"
+            "prover"
         );
         assert_eq!(result.args, vec!["--log".to_string(), "info".to_string()]);
         assert_eq!(result.env.len(), 1);
