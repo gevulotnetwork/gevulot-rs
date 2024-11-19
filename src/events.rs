@@ -410,6 +410,7 @@ impl GevulotEvent {
                             .map(|s| s.split(',').map(|x| x.trim().to_string()).collect::<Vec<_>>())
                             .unwrap_or_default()
                     })
+                    .filter(|url| !url.is_empty())
                     .collect::<Vec<String>>();
                 
                 Ok(GevulotEvent::Pin(PinEvent::Create(PinCreateEvent {
