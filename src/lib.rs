@@ -6,14 +6,14 @@ pub mod builders;
 pub mod gevulot_client;
 /// This module contains the client implementation for managing pins.
 pub mod pin_client;
+/// This module contains the client implementation for sudo functionality.
+pub mod sudo_client;
 /// This module contains the client implementation for managing tasks.
 pub mod task_client;
 /// This module contains the client implementation for managing workers.
 pub mod worker_client;
 /// This module contains the client implementation for managing workflows.
 pub mod workflow_client;
-/// This module contains the client implementation for sudo functionality.
-pub mod sudo_client;
 
 pub mod models;
 pub mod runtime_config;
@@ -199,5 +199,4 @@ mod tests {
 
         cli.workers.delete(delete_worker_msg).await.unwrap();
     }
-
 }

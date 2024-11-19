@@ -2,9 +2,9 @@ use crate::base_client::BaseClient;
 use crate::error::Result;
 use crate::gov_client::GovClient;
 use crate::pin_client::PinClient;
+use crate::sudo_client::SudoClient;
 use crate::task_client::TaskClient;
 use crate::worker_client::WorkerClient;
-use crate::sudo_client::SudoClient;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
