@@ -422,6 +422,7 @@ impl GevulotEvent {
                             })
                             .unwrap_or_default()
                     })
+                    .filter(|url| !url.is_empty())
                     .collect::<Vec<String>>();
 
                 Ok(GevulotEvent::Pin(PinEvent::Create(PinCreateEvent {
