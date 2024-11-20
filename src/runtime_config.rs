@@ -40,8 +40,14 @@
 use serde::de::Error;
 use serde::{Deserialize, Serialize};
 
+const MAJOR: u64 = 1;
+const MINOR: u64 = 1;
+const PATCH: u64 = 0;
+
+const SEM_VERSION: semver::Version = semver::Version::new(MAJOR, MINOR, PATCH);
+
 /// Version of runtime configuration.
-pub const VERSION: &str = "1.1";
+pub const VERSION: &str = const_format::concatcp!(MAJOR, ".", MINOR, ".", PATCH);
 
 /// Environment variable definition.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -113,8 +119,31 @@ fn deserialize_version<'de, D>(deserializer: D) -> Result<String, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
-    let version = String::deserialize(deserializer)?;
-    if version != VERSION {
+    let mut version = String::deserialize(deserializer)?;
+    // After deserialization, complete the version up to SemVer format: "X.Y.Z"
+    let split = version.split('.').collect::<Vec<_>>();
+    match split.len() {
+        1 => {
+            version.push_str(".0.0");
+        }
+        2 => {
+            version.push_str(".0");
+        }
+        3 => {}
+        _ => {
+            return Err(D::Error::custom(
+                "Gevulot runtime config: invalid version string",
+            ));
+        }
+    }
+    // Now compare versions in terms of SemVer
+    let semversion = semver::Version::parse(&version).map_err(|err| {
+        D::Error::custom(format!(
+            "Gevulot runtime config: failed to parse version: {}",
+            err
+        ))
+    })?;
+    if semversion.major != SEM_VERSION.major || semversion > SEM_VERSION {
         return Err(D::Error::custom(
             "Gevulot runtime config: unsupported version",
         ));
