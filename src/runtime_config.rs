@@ -41,7 +41,7 @@ use serde::de::Error;
 use serde::{Deserialize, Serialize};
 
 /// Version of runtime configuration.
-pub const VERSION: &str = "1";
+pub const VERSION: &str = "1.1";
 
 /// Environment variable definition.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
