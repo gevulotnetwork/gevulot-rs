@@ -102,7 +102,7 @@ pub enum DebugExit {
 }
 
 impl DebugExit {
-    pub fn default_x86() -> Self {
+    pub const fn default_x86() -> Self {
         Self::X86 {
             iobase: 0xf4,
             iosize: 0x4,
