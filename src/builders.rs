@@ -150,7 +150,7 @@ impl MsgCreateTaskBuilder {
 #[derive(Builder)]
 pub struct MsgCreatePin {
     pub creator: String,
-    pub cid: String,
+    pub cid: Option<String>,
     pub bytes: ByteSize,
     pub name: String,
     pub redundancy: u64,
@@ -168,7 +168,7 @@ impl MsgCreatePinBuilder {
             .map_err(|e| Error::EncodeError(e.to_string()))?;
         Ok(gevulot::MsgCreatePin {
             creator: msg.creator,
-            cid: msg.cid,
+            cid: msg.cid.unwrap_or_default(),
             bytes: msg.bytes.to_bytes(),
             name: msg.name,
             redundancy: msg.redundancy,
