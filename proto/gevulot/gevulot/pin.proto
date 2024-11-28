@@ -21,9 +21,11 @@ message PinSpec {
 message PinStatus {
   repeated string assignedWorkers = 1;
   repeated PinAck workerAcks = 2;
+  string cid = 3;
 }
 
 message PinAck {
   string worker = 1;
   uint64 blockHeight = 2;
+  bool success = 3;
 }
