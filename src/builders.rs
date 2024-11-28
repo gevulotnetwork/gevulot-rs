@@ -185,6 +185,7 @@ impl MsgCreatePinBuilder {
 pub struct MsgDeletePin {
     pub creator: String,
     pub cid: String,
+    pub id: String,
 }
 
 impl MsgDeletePinBuilder {
@@ -195,6 +196,7 @@ impl MsgDeletePinBuilder {
         Ok(gevulot::MsgDeletePin {
             creator: msg.creator,
             cid: msg.cid,
+            id: msg.id,
         })
     }
 }
@@ -253,7 +255,9 @@ impl MsgDeleteWorkerBuilder {
 pub struct MsgAckPin {
     pub creator: String,
     pub cid: String,
+    pub id: String,
     pub worker_id: String,
+    pub success: bool,
 }
 
 impl MsgAckPinBuilder {
@@ -264,7 +268,9 @@ impl MsgAckPinBuilder {
         Ok(gevulot::MsgAckPin {
             creator: msg.creator,
             cid: msg.cid,
+            id: msg.id,
             worker_id: msg.worker_id,
+            success: msg.success,
         })
     }
 }
