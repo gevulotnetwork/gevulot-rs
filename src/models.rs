@@ -109,7 +109,8 @@ pub struct Pin {
 impl From<gevulot::Pin> for Pin {
     fn from(proto: gevulot::Pin) -> Self {
         let mut spec: PinSpec = proto.spec.unwrap().into();
-        spec.cid = proto.status
+        spec.cid = proto
+            .status
             .as_ref()
             .map(|s| s.cid.clone())
             .or_else(|| proto.metadata.as_ref().map(|m| m.id.clone()));
@@ -196,7 +197,7 @@ impl From<gevulot::PinStatus> for PinStatus {
                     block_height: a.block_height as i64,
                 })
                 .collect(),
-            cid: Some(proto.cid)
+            cid: Some(proto.cid),
         }
     }
 }
