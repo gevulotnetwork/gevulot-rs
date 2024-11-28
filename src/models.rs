@@ -110,10 +110,10 @@ impl From<gevulot::Pin> for Pin {
     fn from(proto: gevulot::Pin) -> Self {
         let mut spec: PinSpec = proto.spec.unwrap().into();
         spec.cid = proto
-            .metadata
+            .status
             .as_ref()
-            .map(|m| m.id.clone())
-            .unwrap_or_default();
+            .map(|s| s.cid.clone())
+            .or_else(|| proto.metadata.as_ref().map(|m| m.id.clone()));
         Pin {
             kind: "Pin".to_string(),
             version: "v0".to_string(),
@@ -156,7 +156,7 @@ impl From<gevulot::Pin> for Pin {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PinSpec {
-    pub cid: String,
+    pub cid: Option<String>,
     pub bytes: i64,
     pub time: i64,
     pub redundancy: i64,
@@ -167,7 +167,7 @@ pub struct PinSpec {
 impl From<gevulot::PinSpec> for PinSpec {
     fn from(proto: gevulot::PinSpec) -> Self {
         PinSpec {
-            cid: "".to_string(),
+            cid: None,
             bytes: proto.bytes as i64,
             time: proto.time as i64,
             redundancy: proto.redundancy as i64,
@@ -182,6 +182,7 @@ pub struct PinStatus {
     pub assigned_workers: Vec<String>,
     #[serde(rename = "workerAcks")]
     pub worker_acks: Vec<PinAck>,
+    pub cid: Option<String>,
 }
 
 impl From<gevulot::PinStatus> for PinStatus {
@@ -196,6 +197,7 @@ impl From<gevulot::PinStatus> for PinStatus {
                     block_height: a.block_height as i64,
                 })
                 .collect(),
+            cid: Some(proto.cid),
         }
     }
 }
