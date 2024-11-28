@@ -424,6 +424,12 @@ impl GevulotEvent {
                     })
                     .filter(|url| !url.is_empty())
                     .collect::<Vec<String>>();
+                let id = event
+                    .attributes
+                    .iter()
+                    .find(|attr| attr.key_bytes() == b"id")
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_else(|| cid.clone());
 
                 Ok(GevulotEvent::Pin(PinEvent::Create(PinCreateEvent {
                     block_height,
@@ -432,6 +438,7 @@ impl GevulotEvent {
                     assigned_workers,
                     retention_period,
                     fallback_urls,
+                    id,
                 })))
             }
             "delete-pin" => {
@@ -449,11 +456,18 @@ impl GevulotEvent {
                     .ok_or(Error::MissingEventAttribute("creator"))?
                     .value_str()?
                     .to_string();
+                let id = event
+                    .attributes
+                    .iter()
+                    .find(|attr| attr.key_bytes() == b"id")
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_else(|| cid.clone());
 
                 Ok(GevulotEvent::Pin(PinEvent::Delete(PinDeleteEvent {
                     block_height,
                     cid,
                     creator,
+                    id,
                 })))
             }
             "ack-pin" => {
@@ -478,11 +492,25 @@ impl GevulotEvent {
                     .ok_or(Error::MissingEventAttribute("creator"))?
                     .value_str()?
                     .to_string();
+                let success = event
+                    .attributes
+                    .iter()
+                    .find(|attr| attr.key_bytes() == b"success")
+                    .map(|attr| attr.value_str().unwrap_or("true").parse().unwrap_or(true))
+                    .unwrap_or(true);
+                let id = event
+                    .attributes
+                    .iter()
+                    .find(|attr| attr.key_bytes() == b"id")
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_else(|| cid.clone());
                 Ok(GevulotEvent::Pin(PinEvent::Ack(PinAckEvent {
                     block_height,
                     cid,
                     worker_id,
                     creator,
+                    success,
+                    id,
                 })))
             }
             _ => Err(Error::UnknownEventKind(event.kind.clone())),
@@ -494,6 +522,7 @@ impl GevulotEvent {
 pub struct PinCreateEvent {
     pub block_height: Height,
     pub cid: String,
+    pub id: String,
     pub creator: String,
     pub assigned_workers: Vec<String>,
     pub retention_period: u64,
@@ -504,6 +533,7 @@ pub struct PinCreateEvent {
 pub struct PinDeleteEvent {
     pub block_height: Height,
     pub cid: String,
+    pub id: String,
     pub creator: String,
 }
 
@@ -511,8 +541,10 @@ pub struct PinDeleteEvent {
 pub struct PinAckEvent {
     pub block_height: Height,
     pub cid: String,
+    pub id: String,
     pub creator: String,
     pub worker_id: String,
+    pub success: bool,
 }
 
 #[derive(Clone, Debug)]
