@@ -146,7 +146,9 @@ mod tests {
         // Create a pin
         let pin_msg = builders::MsgCreatePinBuilder::default()
             .creator(address.clone())
-            .cid(Some("QmSWeBJYvDqKUFG3om4gsrKGf379zk8Jq5tYXpDp7Xo".to_string()))
+            .cid(Some(
+                "QmSWeBJYvDqKUFG3om4gsrKGf379zk8Jq5tYXpDp7Xo".to_string(),
+            ))
             .bytes((32, Byte).into())
             .time(3600)
             .redundancy(1)
