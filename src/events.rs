@@ -674,6 +674,7 @@ pub enum WorkflowEvent {
     Finish(WorkflowFinishEvent),
 }
 
+#[cfg(test)]
 mod tests {
 
     use super::*;
