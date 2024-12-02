@@ -203,7 +203,11 @@ impl BaseClient {
 
         log::debug!("token transfer msg: {:?}", msg);
 
-        self.send_msg_sync(msg, "token transfer").await?;
+        self.send_msg_sync::<_, cosmrs::proto::cosmos::bank::v1beta1::MsgSendResponse>(
+            msg,
+            "token transfer",
+        )
+        .await?;
 
         Ok(())
     }
