@@ -13,13 +13,14 @@
 //!
 //! The configuration SHOULD be processed in the following way:
 //!
-//! 1. Mount default filesystems (default filesystems are defined by VM itself);
-//! 2. Mount filesystems in order of specification in [`mounts`](RuntimeConfig::mounts);
-//! 3. Set environment variables specified in [`env`](RuntimeConfig::env);
-//! 4. Set working directory to [`working_dir`](RuntimeConfig::working_dir);
-//! 5. Load kernel modules in order of specification in
+//! - Mount default filesystems (default filesystems are defined by VM itself);
+//! - Setup ISA debug exit port if some (specifying multiple ports is not allowed).
+//! - Mount filesystems in order of specification in [`mounts`](RuntimeConfig::mounts);
+//! - Set environment variables specified in [`env`](RuntimeConfig::env);
+//! - Set working directory to [`working_dir`](RuntimeConfig::working_dir);
+//! - Load kernel modules in order of specification in
 //! [`kernel_modules`](RuntimeConfig::kernel_modules);
-//! 6. Run boot commands in order of specification in [`bootcmd`](RuntimeConfig::bootcmd).
+//! - Run boot commands in order of specification in [`bootcmd`](RuntimeConfig::bootcmd).
 //!
 //! If current configuration defines a `command` to run, it should be updated together with its
 //! arguments. If there is a following configuration, it should be loaded and processed in the same
@@ -39,11 +40,17 @@
 use serde::de::Error;
 use serde::{Deserialize, Serialize};
 
+const MAJOR: u64 = 1;
+const MINOR: u64 = 1;
+const PATCH: u64 = 0;
+
+const SEM_VERSION: semver::Version = semver::Version::new(MAJOR, MINOR, PATCH);
+
 /// Version of runtime configuration.
-pub const VERSION: &str = "1";
+pub const VERSION: &str = const_format::concatcp!(MAJOR, ".", MINOR, ".", PATCH);
 
 /// Environment variable definition.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct EnvVar {
     pub key: String,
     pub value: String,
@@ -74,6 +81,36 @@ impl Mount {
     }
 }
 
+/// Debug exit method depending on ISA.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(tag = "arch")]
+pub enum DebugExit {
+    /// Definition of exit code port for x86 QEMU.
+    ///
+    /// Defaults: iobase=0xf4,iosize=0x4
+    #[serde(rename = "x86")]
+    X86 {
+        iobase: u16,
+        /// No reason to set it to something other than 0x4,
+        /// because `success_code` is `u32`.
+        iosize: u16,
+        /// Must be odd number greater than 1.
+        /// 1 will be an error code.
+        #[serde(rename = "success-code")]
+        success_code: u32,
+    },
+}
+
+impl DebugExit {
+    pub const fn default_x86() -> Self {
+        Self::X86 {
+            iobase: 0xf4,
+            iosize: 0x4,
+            success_code: 0x3,
+        }
+    }
+}
+
 fn true_value() -> bool {
     true
 }
@@ -82,8 +119,31 @@ fn deserialize_version<'de, D>(deserializer: D) -> Result<String, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
-    let version = String::deserialize(deserializer)?;
-    if version != VERSION {
+    let mut version = String::deserialize(deserializer)?;
+    // After deserialization, complete the version up to SemVer format: "X.Y.Z"
+    let split = version.split('.').collect::<Vec<_>>();
+    match split.len() {
+        1 => {
+            version.push_str(".0.0");
+        }
+        2 => {
+            version.push_str(".0");
+        }
+        3 => {}
+        _ => {
+            return Err(D::Error::custom(
+                "Gevulot runtime config: invalid version string",
+            ));
+        }
+    }
+    // Now compare versions in terms of SemVer
+    let semversion = semver::Version::parse(&version).map_err(|err| {
+        D::Error::custom(format!(
+            "Gevulot runtime config: failed to parse version: {}",
+            err
+        ))
+    })?;
+    if semversion.major != SEM_VERSION.major || semversion > SEM_VERSION {
         return Err(D::Error::custom(
             "Gevulot runtime config: unsupported version",
         ));
@@ -131,6 +191,11 @@ pub struct RuntimeConfig {
     #[serde(default)]
     pub kernel_modules: Vec<String>,
 
+    /// Debug exit (e.g. for QEMU `isa-debug-exit` device).
+    ///
+    /// If none specified, a simple shutdown is expected.
+    pub debug_exit: Option<DebugExit>,
+
     /// Boot commands.
     ///
     /// Arbitrary commands to execute at initialization time.
@@ -151,7 +216,7 @@ pub struct RuntimeConfig {
 
 #[cfg(test)]
 mod tests {
-    use super::RuntimeConfig;
+    use super::{DebugExit, EnvVar, RuntimeConfig};
 
     #[test]
     fn test_deserialize_version_ok() {
@@ -190,6 +255,7 @@ mod tests {
     }
 
     const EXAMPLE_CONFIG: &str = "
+    version: 1
     working-dir: /
     command: prover
     args: [--log, info]
@@ -202,6 +268,11 @@ mod tests {
     default-mounts: true
     kernel-modules:
       - nvidia
+    debug-exit:
+      arch: x86
+      iobase: 0xf4
+      iosize: 0x4
+      success-code: 0x3
     bootcmd:
       - [echo, booting]
     follow-config: /my/local/config.yaml
@@ -213,12 +284,17 @@ mod tests {
             .expect("deserialization should succeed");
         assert_eq!(
             &result.command.expect("command should be present"),
-            "/prover"
+            "prover"
         );
         assert_eq!(result.args, vec!["--log".to_string(), "info".to_string()]);
         assert_eq!(result.env.len(), 1);
-        assert_eq!(result.env[0].key, "TMPDIR".to_string());
-        assert_eq!(result.env[0].value, "/tmp".to_string());
+        assert_eq!(
+            result.env[0],
+            EnvVar {
+                key: "TMPDIR".to_string(),
+                value: "/tmp".to_string()
+            }
+        );
         assert_eq!(
             &result.working_dir.expect("working dir should be present"),
             "/"
@@ -231,6 +307,7 @@ mod tests {
         assert_eq!(result.mounts[0].data, None);
         assert_eq!(result.default_mounts, true);
         assert_eq!(result.kernel_modules, vec!["nvidia".to_string()]);
+        assert_eq!(result.debug_exit, Some(DebugExit::default_x86()));
         assert_eq!(result.bootcmd, vec![vec!["echo", "booting"]]);
         assert_eq!(
             &result

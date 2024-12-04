@@ -1,0 +1,49 @@
+name: Check gevulot-rs
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+
+jobs:
+  test:
+    name: All gevulot-rs checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install buf
+        uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Use Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Check build
+        run: cargo check --locked
+
+      # TODO: re-enable this after fixing all clippy warnings
+      # - name: Run linting
+      #   run: cargo clippy --locked --no-deps -- --deny warnings
+
+      - name: Run runtime-config tests
+        run: cargo test --locked runtime_config
+
+      - name: Run events tests
+        run: cargo test --locked events

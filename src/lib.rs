@@ -6,14 +6,14 @@ pub mod builders;
 pub mod gevulot_client;
 /// This module contains the client implementation for managing pins.
 pub mod pin_client;
+/// This module contains the client implementation for sudo functionality.
+pub mod sudo_client;
 /// This module contains the client implementation for managing tasks.
 pub mod task_client;
 /// This module contains the client implementation for managing workers.
 pub mod worker_client;
 /// This module contains the client implementation for managing workflows.
 pub mod workflow_client;
-/// This module contains the client implementation for sudo functionality.
-pub mod sudo_client;
 
 pub mod models;
 pub mod runtime_config;
@@ -146,7 +146,9 @@ mod tests {
         // Create a pin
         let pin_msg = builders::MsgCreatePinBuilder::default()
             .creator(address.clone())
-            .cid("QmSWeBJYvDqKUFG3om4gsrKGf379zk8Jq5tYXpDp7Xo".to_string())
+            .cid(Some(
+                "QmSWeBJYvDqKUFG3om4gsrKGf379zk8Jq5tYXpDp7Xo".to_string(),
+            ))
             .bytes((32, Byte).into())
             .time(3600)
             .redundancy(1)
@@ -199,5 +201,4 @@ mod tests {
 
         cli.workers.delete(delete_worker_msg).await.unwrap();
     }
-
 }

@@ -238,12 +238,15 @@ message MsgCreatePin {
   repeated string              fallback_urls = 10;
 }
 
-message MsgCreatePinResponse {}
+message MsgCreatePinResponse {
+  string id = 1;
+}
 
 message MsgDeletePin {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string cid     = 2;
+  string id      = 3;
 }
 
 message MsgDeletePinResponse {}
@@ -253,6 +256,8 @@ message MsgAckPin {
   string creator  = 1;
   string workerId = 2;
   string cid      = 3;
+  string id       = 4;
+  bool success    = 5;
 }
 
 message MsgAckPinResponse {}

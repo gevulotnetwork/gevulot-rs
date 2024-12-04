@@ -1,13 +1,24 @@
 [package]
 name = "gevulot-rs"
-version = "0.1.0"
+version = "0.1.3"
 edition = "2021"
+authors = ["Gevulot Team"]
+description = "Gevulot Rust API"
+keywords = ["blockchain", "zero-knowledge"]
+homepage = "https://www.gevulot.com"
+repository = "https://github.com/gevulotnetwork/gevulot-rs"
+readme = "README.md"
+documentation = "https://docs.rs/gevulot-rs"
+license = "MIT OR Apache-2.0"
+rust-version = "1.75"
+exclude = [".github/**", "flake.nix", "flake.lock", ".envrc", "go.mod"]
 
 [lib]
 name = "gevulot_rs"
 path = "src/lib.rs"
 
 [dependencies]
+const_format = "0.2.33"
 cosmos-sdk-proto = "0.25"
 cosmrs = { version = "0.20", features = ["tokio", "grpc", "rpc", "tendermint-rpc"] }
 bip32 =  { version = "0.5.1", features = [ "mnemonic", "bip39" ] }
@@ -20,6 +31,7 @@ pretty_env_logger = "0.5.0"
 prost = "0.13"
 rand = "0.8.5"
 rand_core = "0.6.4"
+semver = "1"
 serde = "1"
 serde_json = "1"
 tendermint = "0.39.1"
