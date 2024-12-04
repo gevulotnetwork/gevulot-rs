@@ -407,7 +407,6 @@ pub struct Workflow {
     pub status: Option<WorkflowStatus>,
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WorkflowStage {
     pub tasks: Vec<TaskSpec>,
@@ -476,9 +475,13 @@ impl From<gevulot::Workflow> for Workflow {
 impl From<gevulot::WorkflowSpec> for WorkflowSpec {
     fn from(proto: gevulot::WorkflowSpec) -> Self {
         WorkflowSpec {
-            stages: proto.stages.into_iter().map(|stage| WorkflowStage {
-                tasks: stage.tasks.into_iter().map(|t| t.into()).collect(),
-            }).collect(),
+            stages: proto
+                .stages
+                .into_iter()
+                .map(|stage| WorkflowStage {
+                    tasks: stage.tasks.into_iter().map(|t| t.into()).collect(),
+                })
+                .collect(),
         }
     }
 }
@@ -494,10 +497,14 @@ impl From<gevulot::WorkflowStatus> for WorkflowStatus {
                 _ => "Unknown".to_string(),
             },
             current_stage: proto.current_stage,
-            stages: proto.stages.into_iter().map(|s| WorkflowStageStatus {
-                task_ids: s.task_ids,
-                finished_tasks: s.finished_tasks,
-            }).collect(),
+            stages: proto
+                .stages
+                .into_iter()
+                .map(|s| WorkflowStageStatus {
+                    task_ids: s.task_ids,
+                    finished_tasks: s.finished_tasks,
+                })
+                .collect(),
         }
     }
 }
