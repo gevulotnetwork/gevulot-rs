@@ -3,7 +3,6 @@ use crate::error::Result;
 use crate::gov_client::GovClient;
 use crate::pin_client::PinClient;
 use crate::sudo_client::SudoClient;
-use crate::sudo_client::SudoClient;
 use crate::task_client::TaskClient;
 use crate::worker_client::WorkerClient;
 use crate::workflow_client::WorkflowClient;
