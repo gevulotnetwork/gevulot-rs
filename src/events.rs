@@ -29,9 +29,8 @@ impl GevulotEvent {
                     .attributes
                     .iter()
                     .find(|attr| attr.key_bytes() == b"creator")
-                    .ok_or(Error::MissingEventAttribute("creator"))?
-                    .value_str()?
-                    .to_string();
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_default();
 
                 Ok(GevulotEvent::Worker(WorkerEvent::Create(
                     WorkerCreateEvent {
@@ -54,9 +53,8 @@ impl GevulotEvent {
                     .attributes
                     .iter()
                     .find(|attr| attr.key_bytes() == b"creator")
-                    .ok_or(Error::MissingEventAttribute("creator"))?
-                    .value_str()?
-                    .to_string();
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_default();
 
                 Ok(GevulotEvent::Worker(WorkerEvent::Update(
                     WorkerUpdateEvent {
@@ -79,9 +77,8 @@ impl GevulotEvent {
                     .attributes
                     .iter()
                     .find(|attr| attr.key_bytes() == b"creator")
-                    .ok_or(Error::MissingEventAttribute("creator"))?
-                    .value_str()?
-                    .to_string();
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_default();
 
                 Ok(GevulotEvent::Worker(WorkerEvent::Delete(
                     WorkerDeleteEvent {
@@ -104,9 +101,8 @@ impl GevulotEvent {
                     .attributes
                     .iter()
                     .find(|attr| attr.key_bytes() == b"creator")
-                    .ok_or(Error::MissingEventAttribute("creator"))?
-                    .value_str()?
-                    .to_string();
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_default();
 
                 Ok(GevulotEvent::Worker(WorkerEvent::AnnounceExit(
                     WorkerAnnounceExitEvent {
@@ -129,14 +125,13 @@ impl GevulotEvent {
                     .attributes
                     .iter()
                     .find(|attr| attr.key_bytes() == b"creator")
-                    .ok_or(Error::MissingEventAttribute("creator"))?
-                    .value_str()?
-                    .to_string();
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_default();
 
                 let assigned_workers = event
                     .attributes
                     .iter()
-                    .filter(|attr| attr.key_bytes() == b"assigned-workers")
+                    .filter(|attr| attr.key_bytes() == b"worker-id")
                     .flat_map(|attr| {
                         attr.value_str()
                             .map(|s| {
@@ -168,9 +163,8 @@ impl GevulotEvent {
                     .attributes
                     .iter()
                     .find(|attr| attr.key_bytes() == b"creator")
-                    .ok_or(Error::MissingEventAttribute("creator"))?
-                    .value_str()?
-                    .to_string();
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_default();
 
                 Ok(GevulotEvent::Task(TaskEvent::Delete(TaskDeleteEvent {
                     block_height,
@@ -187,14 +181,6 @@ impl GevulotEvent {
                     .value_str()?
                     .to_string();
 
-                let creator = event
-                    .attributes
-                    .iter()
-                    .find(|attr| attr.key_bytes() == b"creator")
-                    .ok_or(Error::MissingEventAttribute("creator"))?
-                    .value_str()?
-                    .to_string();
-
                 let worker_id = event
                     .attributes
                     .iter()
@@ -203,11 +189,17 @@ impl GevulotEvent {
                     .value_str()?
                     .to_string();
 
+                let creator = event
+                    .attributes
+                    .iter()
+                    .find(|attr| attr.key_bytes() == b"creator")
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_default();
                 Ok(GevulotEvent::Task(TaskEvent::Finish(TaskFinishEvent {
                     block_height,
                     task_id,
-                    creator,
                     worker_id,
+                    creator,
                 })))
             }
             "decline-task" => {
@@ -223,9 +215,8 @@ impl GevulotEvent {
                     .attributes
                     .iter()
                     .find(|attr| attr.key_bytes() == b"creator")
-                    .ok_or(Error::MissingEventAttribute("creator"))?
-                    .value_str()?
-                    .to_string();
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_default();
 
                 let worker_id = event
                     .attributes
@@ -254,9 +245,8 @@ impl GevulotEvent {
                     .attributes
                     .iter()
                     .find(|attr| attr.key_bytes() == b"creator")
-                    .ok_or(Error::MissingEventAttribute("creator"))?
-                    .value_str()?
-                    .to_string();
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_default();
 
                 let worker_id = event
                     .attributes
@@ -285,9 +275,8 @@ impl GevulotEvent {
                     .attributes
                     .iter()
                     .find(|attr| attr.key_bytes() == b"creator")
-                    .ok_or(Error::MissingEventAttribute("creator"))?
-                    .value_str()?
-                    .to_string();
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_default();
 
                 Ok(GevulotEvent::Workflow(WorkflowEvent::Create(
                     WorkflowCreateEvent {
@@ -310,9 +299,8 @@ impl GevulotEvent {
                     .attributes
                     .iter()
                     .find(|attr| attr.key_bytes() == b"creator")
-                    .ok_or(Error::MissingEventAttribute("creator"))?
-                    .value_str()?
-                    .to_string();
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_default();
 
                 Ok(GevulotEvent::Workflow(WorkflowEvent::Delete(
                     WorkflowDeleteEvent {
@@ -335,9 +323,8 @@ impl GevulotEvent {
                     .attributes
                     .iter()
                     .find(|attr| attr.key_bytes() == b"creator")
-                    .ok_or(Error::MissingEventAttribute("creator"))?
-                    .value_str()?
-                    .to_string();
+                    .map(|attr| attr.value_str().unwrap_or_default().to_string())
+                    .unwrap_or_default();
 
                 Ok(GevulotEvent::Workflow(WorkflowEvent::Finish(
                     WorkflowFinishEvent {
