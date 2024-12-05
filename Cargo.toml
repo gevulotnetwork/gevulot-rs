@@ -11,7 +11,18 @@ readme = "README.md"
 documentation = "https://docs.rs/gevulot-rs"
 license = "MIT OR Apache-2.0"
 rust-version = "1.75"
-exclude = [".github/**", "flake.nix", "flake.lock", ".envrc", "go.mod"]
+include = [
+    "/buf_exported",
+    "/proto",
+    "/src",
+    ".gitignore",
+    "/buf.work.yaml",
+    "/build.rs",
+    "/Cargo.lock",
+    "/Cargo.toml",
+    "/LICENSE*",
+    "/README.md",
+]
 
 [lib]
 name = "gevulot_rs"
