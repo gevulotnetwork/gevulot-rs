@@ -1,1 +1,4 @@
 target
+
+# Used by pre-publish script for proto-files which must go to Cargo package
+buf_exported/
