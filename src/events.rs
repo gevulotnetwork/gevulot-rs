@@ -951,12 +951,12 @@ mod tests {
                 },
                 EventAttribute {
                     index: true,
-                    key: b"assigned-workers".to_vec(),
+                    key: b"worker-id".to_vec(),
                     value: b"worker1,worker2".to_vec(),
                 },
                 EventAttribute {
                     index: true,
-                    key: b"assigned-workers".to_vec(),
+                    key: b"worker-id".to_vec(),
                     value: b"worker3".to_vec(),
                 },
             ],
