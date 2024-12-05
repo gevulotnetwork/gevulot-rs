@@ -747,7 +747,7 @@ dependencies = [
 
 [[package]]
 name = "gevulot-rs"
-version = "0.1.3"
+version = "0.1.3-pre"
 dependencies = [
  "backon",
  "bip32",
