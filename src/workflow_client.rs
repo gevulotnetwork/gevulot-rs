@@ -10,6 +10,7 @@ use crate::{
 };
 
 /// Client for managing workflows in the Gevulot system.
+#[derive(Debug, Clone)]
 pub struct WorkflowClient {
     base_client: Arc<RwLock<BaseClient>>,
 }
