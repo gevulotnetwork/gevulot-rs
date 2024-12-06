@@ -771,8 +771,13 @@ mod tests {
                 },
                 EventAttribute {
                     index: true,
-                    key: b"creator".to_vec(),
-                    value: b"cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh".to_vec(),
+                    key: b"success".to_vec(),
+                    value: b"true".to_vec(),
+                },
+                EventAttribute {
+                    index: true,
+                    key: b"id".to_vec(),
+                    value: b"123".to_vec(),
                 },
             ],
         );
@@ -784,10 +789,8 @@ mod tests {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.cid, "QmYwMXeEc3Z64vqcPXx8p8Y8Y5tE9Y5sYW42FZ1U87Y");
             assert_eq!(event.worker_id, "worker1");
-            assert_eq!(
-                event.creator,
-                "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
-            );
+            assert_eq!(event.success, true);
+            assert_eq!(event.id, "123");
         } else {
             panic!("Unexpected event type");
         }
