@@ -472,13 +472,6 @@ impl GevulotEvent {
                     .ok_or(Error::MissingEventAttribute("worker-id"))?
                     .value_str()?
                     .to_string();
-                let creator = event
-                    .attributes
-                    .iter()
-                    .find(|attr| attr.key_bytes() == b"creator")
-                    .ok_or(Error::MissingEventAttribute("creator"))?
-                    .value_str()?
-                    .to_string();
                 let success = event
                     .attributes
                     .iter()
@@ -495,7 +488,6 @@ impl GevulotEvent {
                     block_height,
                     cid,
                     worker_id,
-                    creator,
                     success,
                     id,
                 })))
@@ -529,7 +521,6 @@ pub struct PinAckEvent {
     pub block_height: Height,
     pub cid: String,
     pub id: String,
-    pub creator: String,
     pub worker_id: String,
     pub success: bool,
 }
