@@ -30,7 +30,7 @@ pub struct BaseClient {
     // Message client
     pub tx_client: TxServiceClient<Channel>,
 
-    gas_price: u128,
+    gas_price: f64,
     denom: String,
     gas_multiplier: f64,
 
@@ -56,7 +56,7 @@ impl BaseClient {
     /// # Returns
     ///
     /// A Result containing the new instance of BaseClient or an error.
-    pub async fn new(endpoint: &str, gas_price: u128, gas_multiplier: f64) -> Result<Self> {
+    pub async fn new(endpoint: &str, gas_price: f64, gas_multiplier: f64) -> Result<Self> {
         use rand::Rng;
         use tokio::time::{sleep, Duration};
 
@@ -259,7 +259,7 @@ impl BaseClient {
         let fee = cosmrs::tx::Fee::from_amount_and_gas(
             Coin {
                 denom: self.denom.parse()?,
-                amount: self.gas_price,
+                amount: (self.gas_price * gas as f64) as u128,
             },
             gas,
         );
@@ -303,7 +303,7 @@ impl BaseClient {
         let fee = cosmrs::tx::Fee::from_amount_and_gas(
             Coin {
                 denom: self.denom.parse()?,
-                amount: self.gas_price * gas_limit as u128,
+                amount: (self.gas_price * gas_limit as f64) as u128,
             },
             gas_limit,
         );

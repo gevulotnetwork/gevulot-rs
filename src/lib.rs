@@ -123,7 +123,7 @@ mod tests {
 
         let mut cli = GevulotClientBuilder::new()
             .endpoint("http://127.0.0.1:9090") // default endpoint
-            .gas_price(1000) // default gas price
+            .gas_price(0.025) // default gas price
             .gas_multiplier(1.2) // default gas multiplier
             .mnemonic(mnemonic.as_str())
             .build()
