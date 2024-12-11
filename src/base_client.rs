@@ -299,7 +299,7 @@ impl BaseClient {
             .await?;
         log::debug!("simulate_response: {:#?}", simulate_response);
         let gas_info = simulate_response.gas_info.ok_or("Failed to get gas info")?;
-        let gas_limit = (gas_info.gas_used * (100. * self.gas_multiplier) as u64) / 100; // Adjust gas limit based on simulation
+        let gas_limit = ((gas_info.gas_used * (100. * self.gas_multiplier) as u64) / 100) + 1; // Adjust gas limit based on simulation
         let fee = cosmrs::tx::Fee::from_amount_and_gas(
             Coin {
                 denom: self.denom.parse()?,
