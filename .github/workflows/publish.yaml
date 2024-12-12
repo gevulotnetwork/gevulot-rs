@@ -31,6 +31,49 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      # Match SemVer version (possibly pre-release)
+      - name: Get release version from tag name
+        run: |
+          TAG_VERSION=$(echo "${{ github.ref_name }}" \
+            | grep -P "^v\d+.\d+.\d+(\-\w+(.\w)*)?$" \
+            | grep --color=never -Po "\d+.\d+.\d+(\-\w+(.\w)*)?$"
+          if [[ -z $TAG_VERSION ]]; then
+            echo "Ref is not a release tag."
+            echo "To create release, use tag names like 'v1.2.3' or 'v1.2.3-pre.4'."
+            exit 1;
+          fi
+          echo "TAG_VERSION=$TAG_VERSION" >> $GITHUB_ENV
+
+      - name: Get crate version from Cargo.toml
+        run: |
+          MANIFEST_VERSION=$(cargo metadata \
+            --format-version=1 \
+            --no-deps \
+            | jq \
+            --raw-output \
+            '.packages[] | select(.name == "gevulot-rs") | .version')
+          echo "MANIFEST_VERSION=$MANIFEST_VERSION" >> $GITHUB_ENV
+
+      - name: Check tag name is aligned with Cargo.toml version
+        run: |
+          if [[ "$MANIFEST_VERSION" != "$TAG_VERSION" ]]; then
+            echo "Tag name is not aligned with Cargo.toml crate version."
+            echo "  Tag version: $TAG_VERSION"
+            echo "  Cargo.toml version: $MANIFEST_VERSION"
+            echo "Please ensure that Cargo.toml version is updated."
+            exit 1;
+          fi
+          echo "VERSION=$MANIFEST_VERSION" >> $GITHUB_ENV
+
+      - name: Print release version
+        run: |
+          echo "Release version: $VERSION"
+
       - name: Run pre-publish script
         run: |
           ./scripts/prepare_publish.sh
