@@ -83,18 +83,10 @@ jobs:
           ls buf_exported/
           cat buf_exported/protos.txt
 
-      - name: Cargo login
+      - name: Cargo publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: |
-          cargo login
-
-      - name: Cargo publish
         # --allow-dirty is required because buf-exportes files are not commited to git,
         # but included into package
         run: |
           cargo publish --allow-dirty
-
-      - name: Cargo logout
-        run: |
-          cargo logout
