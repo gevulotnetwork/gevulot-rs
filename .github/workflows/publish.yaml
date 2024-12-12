@@ -41,7 +41,7 @@ jobs:
         run: |
           TAG_VERSION=$(echo "${{ github.ref_name }}" \
             | grep -P "^v\d+.\d+.\d+(\-\w+(.\w)*)?$" \
-            | grep --color=never -Po "\d+.\d+.\d+(\-\w+(.\w)*)?$"
+            | grep --color=never -Po "\d+.\d+.\d+(\-\w+(.\w)*)?$")
           if [[ -z $TAG_VERSION ]]; then
             echo "Ref is not a release tag."
             echo "To create release, use tag names like 'v1.2.3' or 'v1.2.3-pre.4'."
