@@ -30,7 +30,7 @@ pub struct BaseClient {
     // Message client
     pub tx_client: TxServiceClient<Channel>,
 
-    gas_price: u128,
+    gas_price: f64,
     denom: String,
     gas_multiplier: f64,
 
@@ -56,7 +56,7 @@ impl BaseClient {
     /// # Returns
     ///
     /// A Result containing the new instance of BaseClient or an error.
-    pub async fn new(endpoint: &str, gas_price: u128, gas_multiplier: f64) -> Result<Self> {
+    pub async fn new(endpoint: &str, gas_price: f64, gas_multiplier: f64) -> Result<Self> {
         use rand::Rng;
         use tokio::time::{sleep, Duration};
 
@@ -256,10 +256,11 @@ impl BaseClient {
             .map_err(|_| Error::Parse("fail".to_string()))?;
         let tx_body = cosmrs::tx::BodyBuilder::new().msg(msg).memo(memo).finish();
         let signer_info = cosmrs::tx::SignerInfo::single_direct(self.pub_key, sequence);
+        let gas_per_ucredit = (1.0 / self.gas_price).floor() as u128;
         let fee = cosmrs::tx::Fee::from_amount_and_gas(
             Coin {
                 denom: self.denom.parse()?,
-                amount: self.gas_price,
+                amount: (gas as u128) / gas_per_ucredit + 1,
             },
             gas,
         );
@@ -299,11 +300,12 @@ impl BaseClient {
             .await?;
         log::debug!("simulate_response: {:#?}", simulate_response);
         let gas_info = simulate_response.gas_info.ok_or("Failed to get gas info")?;
-        let gas_limit = (gas_info.gas_used * (100. * self.gas_multiplier) as u64) / 100; // Adjust gas limit based on simulation
+        let gas_limit = (gas_info.gas_used * ((self.gas_multiplier * 10000.0) as u64)) / 10000; // Adjust gas limit based on simulation
+        let gas_per_ucredit = (1.0 / self.gas_price).floor() as u128;
         let fee = cosmrs::tx::Fee::from_amount_and_gas(
             Coin {
                 denom: self.denom.parse()?,
-                amount: self.gas_price * gas_limit as u128,
+                amount: (gas_limit as u128 / gas_per_ucredit) + 1,
             },
             gas_limit,
         );

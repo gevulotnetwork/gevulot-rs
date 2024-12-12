@@ -29,7 +29,7 @@ pub struct GevulotClient {
 /// Builder for GevulotClient
 pub struct GevulotClientBuilder {
     endpoint: String,
-    gas_price: u128,
+    gas_price: f64,
     gas_multiplier: f64,
     mnemonic: Option<String>,
     password: Option<String>,
@@ -40,7 +40,7 @@ impl Default for GevulotClientBuilder {
     fn default() -> Self {
         Self {
             endpoint: "http://127.0.0.1:9090".to_string(),
-            gas_price: 1000,
+            gas_price: 0.025,
             gas_multiplier: 1.2,
             mnemonic: None,
             password: None,
@@ -61,7 +61,7 @@ impl GevulotClientBuilder {
     }
 
     /// Sets the gas price for the GevulotClient
-    pub fn gas_price(mut self, gas_price: u128) -> Self {
+    pub fn gas_price(mut self, gas_price: f64) -> Self {
         self.gas_price = gas_price;
         self
     }
