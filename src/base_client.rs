@@ -256,10 +256,11 @@ impl BaseClient {
             .map_err(|_| Error::Parse("fail".to_string()))?;
         let tx_body = cosmrs::tx::BodyBuilder::new().msg(msg).memo(memo).finish();
         let signer_info = cosmrs::tx::SignerInfo::single_direct(self.pub_key, sequence);
+        let gas_per_ucredit = (1.0 / self.gas_price).floor() as u128;
         let fee = cosmrs::tx::Fee::from_amount_and_gas(
             Coin {
                 denom: self.denom.parse()?,
-                amount: (self.gas_price * gas as f64).ceil() as u128,
+                amount: (gas as u128) / gas_per_ucredit + 1,
             },
             gas,
         );
@@ -299,11 +300,12 @@ impl BaseClient {
             .await?;
         log::debug!("simulate_response: {:#?}", simulate_response);
         let gas_info = simulate_response.gas_info.ok_or("Failed to get gas info")?;
-        let gas_limit = (gas_info.gas_used as f64 * self.gas_multiplier).ceil() as u64; // Adjust gas limit based on simulation
+        let gas_limit = (gas_info.gas_used * ((self.gas_multiplier * 10000.0) as u64)) / 10000; // Adjust gas limit based on simulation
+        let gas_per_ucredit = (1.0 / self.gas_price).floor() as u128;
         let fee = cosmrs::tx::Fee::from_amount_and_gas(
             Coin {
                 denom: self.denom.parse()?,
-                amount: (self.gas_price * gas_limit as f64).ceil() as u128,
+                amount: (gas_limit as u128 / gas_per_ucredit) + 1,
             },
             gas_limit,
         );
