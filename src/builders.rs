@@ -258,6 +258,7 @@ pub struct MsgAckPin {
     pub id: String,
     pub worker_id: String,
     pub success: bool,
+    pub error: Option<String>,
 }
 
 impl MsgAckPinBuilder {
@@ -271,6 +272,7 @@ impl MsgAckPinBuilder {
             id: msg.id,
             worker_id: msg.worker_id,
             success: msg.success,
+            error: msg.error.unwrap_or_default(),
         })
     }
 }
@@ -318,6 +320,7 @@ pub struct MsgDeclineTask {
     pub creator: String,
     pub task_id: String,
     pub worker_id: String,
+    pub error: Option<String>,
 }
 
 impl MsgDeclineTaskBuilder {
@@ -329,6 +332,7 @@ impl MsgDeclineTaskBuilder {
             creator: msg.creator,
             task_id: msg.task_id,
             worker_id: msg.worker_id,
+            error: msg.error.unwrap_or_default(),
         })
     }
 }
@@ -338,10 +342,10 @@ pub struct MsgFinishTask {
     pub creator: String,
     pub task_id: String,
     pub exit_code: i32,
-    pub stdout: String,
-    pub stderr: String,
-    pub output_contexts: Vec<String>,
-    pub error: String,
+    pub stdout: Option<String>,
+    pub stderr: Option<String>,
+    pub output_contexts: Option<Vec<String>>,
+    pub error: Option<String>,
 }
 
 impl MsgFinishTaskBuilder {
@@ -353,10 +357,10 @@ impl MsgFinishTaskBuilder {
             creator: msg.creator,
             task_id: msg.task_id,
             exit_code: msg.exit_code,
-            stdout: msg.stdout,
-            stderr: msg.stderr,
-            output_contexts: msg.output_contexts,
-            error: msg.error,
+            stdout: msg.stdout.unwrap_or_default(),
+            stderr: msg.stderr.unwrap_or_default(),
+            output_contexts: msg.output_contexts.unwrap_or_default(),
+            error: msg.error.unwrap_or_default(),
         })
     }
 }

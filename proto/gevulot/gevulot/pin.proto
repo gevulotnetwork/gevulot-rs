@@ -28,4 +28,5 @@ message PinAck {
   string worker = 1;
   uint64 blockHeight = 2;
   bool success = 3;
+  string error = 4;
 }

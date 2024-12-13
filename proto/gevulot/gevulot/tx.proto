@@ -258,6 +258,7 @@ message MsgAckPin {
   string cid      = 3;
   string id       = 4;
   bool success    = 5;
+  string error    = 6;
 }
 
 message MsgAckPinResponse {}
@@ -276,6 +277,7 @@ message MsgDeclineTask {
   string creator  = 1;
   string workerId = 2;
   string taskId   = 3;
+  string error    = 4;
 }
 
 message MsgDeclineTaskResponse {}
