@@ -196,7 +196,11 @@ impl From<gevulot::PinStatus> for PinStatus {
                     worker: a.worker,
                     block_height: a.block_height as i64,
                     success: a.success,
-                    error: if a.error.is_empty() { None } else { Some(a.error) },
+                    error: if a.error.is_empty() {
+                        None
+                    } else {
+                        Some(a.error)
+                    },
                 })
                 .collect(),
             cid: Some(proto.cid),
