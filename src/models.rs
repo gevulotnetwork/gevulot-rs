@@ -195,6 +195,8 @@ impl From<gevulot::PinStatus> for PinStatus {
                 .map(|a| PinAck {
                     worker: a.worker,
                     block_height: a.block_height as i64,
+                    success: a.success,
+                    error: if a.error.is_empty() { None } else { Some(a.error) },
                 })
                 .collect(),
             cid: Some(proto.cid),
@@ -550,6 +552,8 @@ pub struct PinAck {
     pub worker: String,
     #[serde(rename = "blockHeight")]
     pub block_height: i64,
+    pub success: bool,
+    pub error: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
