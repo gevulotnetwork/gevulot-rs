@@ -204,7 +204,6 @@ impl<'de> Deserialize<'de> for PinSpec {
             }
         }
 
-
         let redundancy = helper.redundancy.unwrap_or(1);
         // Convert to final struct
         Ok(PinSpec {
@@ -975,7 +974,7 @@ mod tests {
             "kind": "Pin",
             "version": "v0",
             "metadata": {
-                "name": "Test Pin", 
+                "name": "Test Pin",
                 "creator": "test",
                 "description": "Test Pin Description",
                 "tags": ["tag1", "tag2"],
@@ -986,7 +985,7 @@ mod tests {
                     },
                     {
                         "key": "label2",
-                        "value": "value2" 
+                        "value": "value2"
                     }
                 ],
                 "workflowRef": "test-workflow"
@@ -1008,7 +1007,7 @@ mod tests {
                         "error": null
                     },
                     {
-                        "worker": "worker2", 
+                        "worker": "worker2",
                         "blockHeight": 1001,
                         "success": false,
                         "error": "Failed to pin"
@@ -1016,7 +1015,8 @@ mod tests {
                 ],
                 "cid": "test-cid"
             }
-        })).unwrap();
+        }))
+        .unwrap();
 
         // Verify metadata
         assert_eq!(pin.kind, "Pin");
@@ -1028,17 +1028,17 @@ mod tests {
         assert_eq!(pin.metadata.labels.len(), 2);
         assert_eq!(pin.metadata.labels[0].key, "label1");
         assert_eq!(pin.metadata.labels[0].value, "value1");
-        assert_eq!(
-            pin.metadata.workflow_ref,
-            Some("test-workflow".to_string())
-        );
+        assert_eq!(pin.metadata.workflow_ref, Some("test-workflow".to_string()));
 
         // Verify spec
         assert_eq!(pin.spec.cid, Some("test-cid".to_string()));
         assert_eq!(pin.spec.bytes.as_number(), Some(1234 * 1024));
         assert_eq!(pin.spec.time.as_number(), Some(24 * 60 * 60));
         assert_eq!(pin.spec.redundancy, 3);
-        assert_eq!(pin.spec.fallback_urls, Some(vec!["url1".to_string(), "url2".to_string()]));
+        assert_eq!(
+            pin.spec.fallback_urls,
+            Some(vec!["url1".to_string(), "url2".to_string()])
+        );
 
         // Verify status
         let status = pin.status.unwrap();
@@ -1061,7 +1061,8 @@ mod tests {
                 "bytes": "1234kb",
                 "time": "24h",
             }
-        })).unwrap();
+        }))
+        .unwrap();
 
         assert_eq!(pin.spec.cid, Some("test-cid".to_string()));
         assert_eq!(pin.spec.bytes.as_number(), Some(1234 * 1024));
@@ -1074,7 +1075,7 @@ mod tests {
     fn test_pin_requires_cid_or_fallback_urls() {
         // Should fail without either cid or fallback_urls
         let result = serde_json::from_value::<Pin>(json!({
-            "kind": "Pin", 
+            "kind": "Pin",
             "version": "v0",
             "spec": {
                 "bytes": "1234kb",
@@ -1086,7 +1087,7 @@ mod tests {
         // Should succeed with just cid
         let result = serde_json::from_value::<Pin>(json!({
             "kind": "Pin",
-            "version": "v0", 
+            "version": "v0",
             "spec": {
                 "cid": "test-cid",
                 "bytes": "1234kb",
