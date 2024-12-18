@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use crate::proto::gevulot::gevulot;
+use bytesize::ByteSize;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -658,24 +659,25 @@ impl ComputeUnit {
     }
 
     fn parse_string(s: &str) -> Result<i64, String> {
-
-        // first check if its a duration using humantime
-        if let Ok(duration) = humantime::parse_duration(s) {
-            return Ok(duration.as_secs() as i64);
-        }
-
         let numeric: String = s.chars().take_while(|c| c.is_digit(10)).collect();
         let unit = s[numeric.len()..].to_lowercase().replace(" ", "");
+
+        if !unit.is_empty() {
+            if let Ok(duration) = humantime::parse_duration(s) {
+                return Ok(duration.as_secs() as i64);
+            }
+
+            if let Ok(bytes) = s.parse::<ByteSize>() {
+                return Ok(bytes.0 as i64);
+            }
+        }
+
         let base: i64 = numeric
             .parse()
             .map_err(|e| format!("Invalid number: {}", e))?;
         Ok(base
             * match unit.as_str() {
-                "byte" | "bytes" => 1,
-                "kb" | "k" => 1024,
-                "mb" | "m" => 1024 * 1024,
-                "gb" | "g" => 1024 * 1024 * 1024,
-                "tb" | "t" => 1024 * 1024 * 1024 * 1024,
+                "byte" | "bytes" => 1, // this is not covered by bytesize crate
                 "cpu" | "cpus" | "core" | "cores" => 1000,
                 "gpu" | "gpus" => 1000,
                 "mcpu" | "mcpus" | "millicpu" | "millicpus" => 1,
@@ -742,14 +744,14 @@ mod tests {
         #[test]
         fn test_unit_deserialization() {
             // Test kilobytes
-            let str = serde_json::from_value::<ComputeUnit>(json!("1234kb")).unwrap();
+            let str = serde_json::from_value::<ComputeUnit>(json!("1234KiB")).unwrap();
             assert_eq!(str.as_number(), Ok(1234 * 1024));
-            assert_eq!(str.as_string(), "1234kb");
+            assert_eq!(str.as_string(), "1234KiB");
 
             // Test megabytes
-            let str = serde_json::from_value::<ComputeUnit>(json!("1234mb")).unwrap();
+            let str = serde_json::from_value::<ComputeUnit>(json!("1234MiB")).unwrap();
             assert_eq!(str.as_number(), Ok(1234 * 1024 * 1024));
-            assert_eq!(str.as_string(), "1234mb");
+            assert_eq!(str.as_string(), "1234MiB");
 
             // Test minutes
             let str = serde_json::from_value::<ComputeUnit>(json!("60min")).unwrap();
@@ -760,8 +762,8 @@ mod tests {
         #[test]
         fn test_serialization() {
             // Test string serialization
-            let str = serde_json::to_string(&ComputeUnit::String("1234kb".to_string())).unwrap();
-            assert_eq!(str, "\"1234kb\"");
+            let str = serde_json::to_string(&ComputeUnit::String("1234KiB".to_string())).unwrap();
+            assert_eq!(str, "\"1234KiB\"");
 
             // Test number serialization
             let str = serde_json::to_string(&ComputeUnit::Number(1234)).unwrap();
@@ -771,7 +773,7 @@ mod tests {
         #[test]
         fn test_string_parsing() {
             // Test valid parse
-            let res: Result<ComputeUnit, _> = "123kb".parse();
+            let res: Result<ComputeUnit, _> = "123KiB".parse();
             assert!(res.is_ok());
             assert_eq!(res.unwrap().as_number(), Ok(123 * 1024));
 
@@ -789,6 +791,37 @@ mod tests {
             let res: Result<ComputeUnit, String> = "1hr 30min 10sec".parse();
             assert!(res.is_ok());
             assert_eq!(res.unwrap().as_number(), Ok(60 * 60 + 30 * 60 + 10));
+        }
+
+        #[test]
+        fn test_bytesize_parsing() {
+            let res: Result<ComputeUnit, String> = "1byte".parse();
+            assert!(res.is_ok());
+            assert_eq!(res.unwrap().as_number(), Ok(1));
+
+            let res: Result<ComputeUnit, String> = "1kb".parse();
+            assert!(res.is_ok());
+            assert_eq!(res.unwrap().as_number(), Ok(1000));
+
+            let res: Result<ComputeUnit, String> = "1mb".parse();
+            assert!(res.is_ok());
+            assert_eq!(res.unwrap().as_number(), Ok(1000 * 1000));
+
+            let res: Result<ComputeUnit, String> = "1gb".parse();
+            assert!(res.is_ok());
+            assert_eq!(res.unwrap().as_number(), Ok(1000 * 1000 * 1000));
+
+            let res: Result<ComputeUnit, String> = "1kiB".parse();
+            assert!(res.is_ok());
+            assert_eq!(res.unwrap().as_number(), Ok(1024));
+
+            let res: Result<ComputeUnit, String> = "1MiB".parse();
+            assert!(res.is_ok());
+            assert_eq!(res.unwrap().as_number(), Ok(1024 * 1024));
+
+            let res: Result<ComputeUnit, String> = "1GiB".parse();
+            assert!(res.is_ok());
+            assert_eq!(res.unwrap().as_number(), Ok(1024 * 1024 * 1024));
         }
     }
 
@@ -882,10 +915,10 @@ mod tests {
             "spec": {
                 "image": "test",
                 "resources": {
-                    "cpus": "1000mcpu",
-                    "gpus": "1000mgpu",
-                    "memory": "1024mb",
-                    "time": "1hr"
+                    "cpus": "1000 MCpu",
+                    "gpus": "1000 MGpu",
+                    "memory": "1024 MiB",
+                    "time": "1 hr"
                 }
             }
         }))
@@ -909,10 +942,10 @@ mod tests {
             spec:
                 image: test
                 resources:
-                    cpus: 1000mcpu
-                    gpus: 1000mgpu
-                    memory: 1024mb
-                    time: 1hr
+                    cpus: 1000 MCpu
+                    gpus: 1000 MGpu
+                    memory: 1024 MiB
+                    time: 1 hr
         "#,
         )
         .expect("Failed to parse task");
@@ -962,7 +995,7 @@ mod tests {
                 "resources": {
                     "cpus": "2cores",
                     "gpus": "1gpu",
-                    "memory": "2gb",
+                    "memory": "2GiB",
                     "time": "1hr"
                 },
                 "storeStdout": true,
@@ -1058,7 +1091,7 @@ mod tests {
             },
             "spec": {
                 "cid": "test-cid",
-                "bytes": "1234kb",
+                "bytes": "1234KiB",
                 "time": "24h",
                 "redundancy": 3,
                 "fallbackUrls": ["url1", "url2"]
@@ -1124,7 +1157,7 @@ mod tests {
             "version": "v0",
             "spec": {
                 "cid": "test-cid",
-                "bytes": "1234kb",
+                "bytes": "1234KiB",
                 "time": "24h",
             }
         }))
@@ -1144,7 +1177,7 @@ mod tests {
             "kind": "Pin",
             "version": "v0",
             "spec": {
-                "bytes": "1234kb",
+                "bytes": "1234KiB",
                 "time": "24h"
             }
         }));
@@ -1156,7 +1189,7 @@ mod tests {
             "version": "v0",
             "spec": {
                 "cid": "test-cid",
-                "bytes": "1234kb",
+                "bytes": "1234KiB",
                 "time": "24h"
             }
         }));
@@ -1168,7 +1201,7 @@ mod tests {
             "version": "v0",
             "spec": {
                 "fallbackUrls": ["url1", "url2"],
-                "bytes": "1234kb",
+                "bytes": "1234KiB",
                 "time": "24h"
             }
         }));
@@ -1180,7 +1213,7 @@ mod tests {
             "version": "v0",
             "spec": {
                 "fallbackUrls": [],
-                "bytes": "1234kb",
+                "bytes": "1234KiB",
                 "time": "24h"
             }
         }));
