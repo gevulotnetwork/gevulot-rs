@@ -658,6 +658,12 @@ impl ComputeUnit {
     }
 
     fn parse_string(s: &str) -> Result<i64, String> {
+
+        // first check if its a duration using humantime
+        if let Ok(duration) = humantime::parse_duration(s) {
+            return Ok(duration.as_secs() as i64);
+        }
+
         let numeric: String = s.chars().take_while(|c| c.is_digit(10)).collect();
         let unit = s[numeric.len()..].to_lowercase().replace(" ", "");
         let base: i64 = numeric
@@ -670,9 +676,6 @@ impl ComputeUnit {
                 "mb" | "m" => 1024 * 1024,
                 "gb" | "g" => 1024 * 1024 * 1024,
                 "tb" | "t" => 1024 * 1024 * 1024 * 1024,
-                "min" => 60,
-                "hr" | "h" => 60 * 60,
-                "day" | "d" => 60 * 60 * 24,
                 "cpu" | "cpus" | "core" | "cores" => 1000,
                 "gpu" | "gpus" => 1000,
                 "mcpu" | "mcpus" | "millicpu" | "millicpus" => 1,
@@ -775,6 +778,17 @@ mod tests {
             // Test invalid parse
             let res: Result<ComputeUnit, String> = "123 this is wrong".parse();
             assert!(res.is_err());
+        }
+
+        #[test]
+        fn test_duration_parsing() {
+            let res: Result<ComputeUnit, String> = "1hr".parse();
+            assert!(res.is_ok());
+            assert_eq!(res.unwrap().as_number(), Ok(60 * 60));
+
+            let res: Result<ComputeUnit, String> = "1hr 30min 10sec".parse();
+            assert!(res.is_ok());
+            assert_eq!(res.unwrap().as_number(), Ok(60 * 60 + 30 * 60 + 10));
         }
     }
 
