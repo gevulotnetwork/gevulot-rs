@@ -1,3 +1,9 @@
+//! Pin module provides functionality for managing pinned data in the system.
+//! 
+//! A Pin represents data that should be stored and maintained by workers in the network.
+//! It includes specifications for storage duration, size, redundancy and can reference
+//! data either by CID or fallback URLs.
+
 use super::{
     metadata::{Label, Metadata},
     serialization_helpers::{ByteUnit, DefaultFactorOne, TimeUnit},
@@ -5,6 +11,59 @@ use super::{
 use crate::proto::gevulot::gevulot;
 use serde::{Deserialize, Serialize};
 
+/// Represents a Pin resource for storing data in the network
+///
+/// A Pin defines what data should be stored, for how long, and with what redundancy level.
+/// The data can be referenced either by CID or fallback URLs.
+///
+/// # Examples
+///
+/// Creating a Pin with CID:
+/// ```
+/// use crate::models::{Pin, PinSpec, Metadata};
+/// 
+/// let pin = Pin {
+///     kind: "Pin".to_string(),
+///     version: "v0".to_string(),
+///     metadata: Metadata {
+///         name: "my-data".to_string(),
+///         ..Default::default()
+///     },
+///     spec: PinSpec {
+///         cid: Some("QmExample123".to_string()),
+///         bytes: "1GB".parse().unwrap(),
+///         time: "24h".parse().unwrap(),
+///         redundancy: 3,
+///         fallback_urls: None,
+///     },
+///     status: None,
+/// };
+/// ```
+///
+/// Creating a Pin with fallback URLs:
+/// ```
+/// use crate::models::{Pin, PinSpec, Metadata};
+///
+/// let pin = Pin {
+///     kind: "Pin".to_string(),
+///     version: "v0".to_string(), 
+///     metadata: Metadata {
+///         name: "my-backup".to_string(),
+///         ..Default::default()
+///     },
+///     spec: PinSpec {
+///         cid: None,
+///         bytes: "500MB".parse().unwrap(),
+///         time: "7d".parse().unwrap(),
+///         redundancy: 2,
+///         fallback_urls: Some(vec![
+///             "https://example.com/backup1".to_string(),
+///             "https://backup.example.com/data".to_string()
+///         ]),
+///     },
+///     status: None,
+/// };
+/// ```
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Pin {
     pub kind: String,
@@ -44,7 +103,7 @@ impl From<gevulot::Pin> for Pin {
                     .as_ref()
                     .map(|m| m.tags.clone())
                     .unwrap_or_default(),
-                labels: proto
+                labels: proto 
                     .metadata
                     .as_ref()
                     .map(|m| m.labels.clone())
@@ -63,6 +122,24 @@ impl From<gevulot::Pin> for Pin {
     }
 }
 
+/// Specification for a Pin resource
+///
+/// Defines the key parameters for pinning data including size, duration and redundancy.
+/// Either a CID or fallback URLs must be specified.
+///
+/// # Examples
+///
+/// ```
+/// use crate::models::PinSpec;
+///
+/// let spec = PinSpec {
+///     cid: Some("QmExample123".to_string()),
+///     bytes: "1GB".parse().unwrap(),
+///     time: "24h".parse().unwrap(),
+///     redundancy: 3,
+///     fallback_urls: None,
+/// };
+/// ```
 #[derive(Serialize, Debug)]
 pub struct PinSpec {
     #[serde(default)]
@@ -136,6 +213,28 @@ impl From<gevulot::PinSpec> for PinSpec {
     }
 }
 
+/// Status information for a Pin
+///
+/// Tracks which workers are assigned to store the data and their acknowledgments.
+///
+/// # Examples
+///
+/// ```
+/// use crate::models::{PinStatus, PinAck};
+///
+/// let status = PinStatus {
+///     assigned_workers: vec!["worker1".to_string(), "worker2".to_string()],
+///     worker_acks: vec![
+///         PinAck {
+///             worker: "worker1".to_string(),
+///             block_height: 1000,
+///             success: true,
+///             error: None,
+///         }
+///     ],
+///     cid: Some("QmExample123".to_string()),
+/// };
+/// ```
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PinStatus {
     #[serde(rename = "assignedWorkers", default)]
@@ -168,6 +267,22 @@ impl From<gevulot::PinStatus> for PinStatus {
     }
 }
 
+/// Acknowledgment from a worker about pinning data
+///
+/// Contains information about whether the pinning was successful and any errors encountered.
+///
+/// # Examples
+///
+/// ```
+/// use crate::models::PinAck;
+///
+/// let ack = PinAck {
+///     worker: "worker1".to_string(),
+///     block_height: 1000,
+///     success: true,
+///     error: None,
+/// };
+/// ```
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PinAck {
     pub worker: String,

@@ -1,7 +1,46 @@
+//! Workflow model and related types for managing workflow execution.
+//! 
+//! This module provides the core workflow model used throughout the system, including:
+//! - Workflow specification with stages and tasks
+//! - Status tracking for workflow execution
+//! - Metadata like tags and labels
+//! - Protobuf serialization/deserialization
+
 use crate::proto::gevulot::gevulot;
 use serde::{Deserialize, Serialize};
 use super::{Label, Metadata, TaskSpec};
 
+/// Represents a complete workflow definition with metadata, specification and status
+///
+/// A workflow consists of one or more stages that are executed sequentially. Each stage
+/// contains one or more tasks that can be executed in parallel.
+///
+/// # Examples
+///
+/// Creating a basic workflow:
+/// ```
+/// use crate::models::Workflow;
+///
+/// let workflow = serde_json::from_str::<Workflow>(r#"{
+///     "kind": "Workflow",
+///     "version": "v0", 
+///     "metadata": {
+///         "name": "my-workflow",
+///         "tags": ["compute"]
+///     },
+///     "spec": {
+///         "stages": [{
+///             "tasks": [{
+///                 "image": "alpine",
+///                 "resources": {
+///                     "cpus": "1cpu",
+///                     "memory": "1GiB"
+///                 }
+///             }]
+///         }]
+///     }
+/// }"#).unwrap();
+/// ```
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Workflow {
     pub kind: String,
@@ -12,8 +51,10 @@ pub struct Workflow {
     pub status: Option<WorkflowStatus>,
 }
 
+// Converts a protobuf workflow message into our internal Workflow model
 impl From<gevulot::Workflow> for Workflow {
     fn from(proto: gevulot::Workflow) -> Self {
+        // Create a new workflow, carefully mapping all protobuf fields to our model
         Workflow {
             kind: "Workflow".to_string(),
             version: "v0".to_string(),
@@ -54,18 +95,28 @@ impl From<gevulot::Workflow> for Workflow {
     }
 }
 
+/// Represents a single stage in a workflow containing one or more tasks
+///
+/// Tasks within a stage can be executed in parallel. The workflow will only
+/// proceed to the next stage once all tasks in the current stage are complete.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WorkflowStage {
     pub tasks: Vec<TaskSpec>,
 }
 
+/// Specification for a workflow defining its stages and tasks
+///
+/// The stages are executed sequentially, with tasks in each stage potentially
+/// running in parallel depending on available resources.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WorkflowSpec {
     pub stages: Vec<WorkflowStage>,
 }
 
+// Converts a protobuf workflow spec into our internal WorkflowSpec model
 impl From<gevulot::WorkflowSpec> for WorkflowSpec {
     fn from(proto: gevulot::WorkflowSpec) -> Self {
+        // Map each protobuf stage to our stage model, converting tasks as well
         WorkflowSpec {
             stages: proto
                 .stages
@@ -78,6 +129,9 @@ impl From<gevulot::WorkflowSpec> for WorkflowSpec {
     }
 }
 
+/// Status information for a single stage in a workflow
+///
+/// Tracks which tasks have been created and how many have completed.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WorkflowStageStatus {
     #[serde(rename = "taskIds")]
@@ -86,6 +140,12 @@ pub struct WorkflowStageStatus {
     pub finished_tasks: u64,
 }
 
+/// Current status of a workflow's execution
+///
+/// Tracks:
+/// - Overall workflow state (Pending, Running, Done, Failed)
+/// - Which stage is currently executing
+/// - Status of each stage including task completion
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WorkflowStatus {
     pub state: String,
@@ -94,9 +154,11 @@ pub struct WorkflowStatus {
     pub stages: Vec<WorkflowStageStatus>,
 }
 
+// Converts a protobuf workflow status into our internal WorkflowStatus model
 impl From<gevulot::WorkflowStatus> for WorkflowStatus {
     fn from(proto: gevulot::WorkflowStatus) -> Self {
         WorkflowStatus {
+            // Map numeric states to human readable strings
             state: match proto.state {
                 0 => "Pending".to_string(),
                 1 => "Running".to_string(), 
@@ -117,6 +179,7 @@ impl From<gevulot::WorkflowStatus> for WorkflowStatus {
     }
 }
 
+// Unit tests to verify workflow serialization/deserialization and field mapping
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -124,6 +187,7 @@ mod tests {
 
     #[test]
     fn test_parse_workflow() {
+        // Test parsing a complete workflow JSON with all fields populated
         let workflow = serde_json::from_value::<Workflow>(json!({
             "kind": "Workflow",
             "version": "v0",
@@ -204,6 +268,7 @@ mod tests {
 
     #[test]
     fn test_parse_workflow_with_minimum() {
+        // Test parsing a minimal workflow JSON with only required fields
         let workflow = serde_json::from_value::<Workflow>(json!({
             "kind": "Workflow",
             "version": "v0",
