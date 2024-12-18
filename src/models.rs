@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::proto::gevulot::gevulot;
 use serde::{Deserialize, Serialize};
 
@@ -159,8 +161,8 @@ impl From<gevulot::Pin> for Pin {
 pub struct PinSpec {
     #[serde(default)]
     pub cid: Option<String>,
-    pub bytes: NumberOrString,
-    pub time: NumberOrString,
+    pub bytes: ComputeUnit,
+    pub time: ComputeUnit,
     pub redundancy: i64,
     #[serde(rename = "fallbackUrls", default)]
     pub fallback_urls: Option<Vec<String>>,
@@ -176,8 +178,8 @@ impl<'de> Deserialize<'de> for PinSpec {
         struct PinSpecHelper {
             #[serde(default)]
             cid: Option<String>,
-            bytes: NumberOrString,
-            time: NumberOrString,
+            bytes: ComputeUnit,
+            time: ComputeUnit,
             redundancy: Option<i64>,
             #[serde(rename = "fallbackUrls", default)]
             fallback_urls: Option<Vec<String>>,
@@ -399,10 +401,10 @@ pub struct OutputContext {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TaskResources {
-    pub cpus: NumberOrString,
-    pub gpus: NumberOrString,
-    pub memory: NumberOrString,
-    pub time: NumberOrString,
+    pub cpus: ComputeUnit,
+    pub gpus: ComputeUnit,
+    pub memory: ComputeUnit,
+    pub time: ComputeUnit,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -642,50 +644,76 @@ pub struct Generic {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
-pub enum NumberOrString {
+pub enum ComputeUnit {
     Number(i64),
     String(String),
 }
 
-impl NumberOrString {
-    pub fn as_number(&self) -> Option<i64> {
+impl ComputeUnit {
+    pub fn as_number(&self) -> Result<i64, String> {
         match self {
-            NumberOrString::Number(n) => Some(*n),
-            NumberOrString::String(s) => {
-                // Parse numeric part and unit suffix
-                let numeric: String = s.chars().take_while(|c| c.is_digit(10)).collect();
-                let unit = s[numeric.len()..].to_lowercase().replace(" ", "");
-                let base: Option<i64> = numeric.parse().ok();
-                base.map(|n| match unit.as_str() {
-                    "kb" | "k" => n * 1024,
-                    "mb" | "m" => n * 1024 * 1024,
-                    "gb" | "g" => n * 1024 * 1024 * 1024,
-                    "tb" | "t" => n * 1024 * 1024 * 1024 * 1024,
-                    "min" => n * 60,
-                    "hr" | "h" => n * 60 * 60,
-                    "day" | "d" => n * 60 * 60 * 24,
-                    "cpu" | "cpus" | "core" | "cores" => n * 1000,
-                    "gpu" | "gpus" => n * 1000,
-                    "mcpu" | "mcpus" | "millicpu" | "millicpus" => n,
-                    "mgpu" | "mgpus" | "milligpu" | "milligpus" => n,
-                    "mcore" | "mcores" | "millicore" | "millicores" => n,
-                    _ => n,
-                })
-            }
+            ComputeUnit::Number(n) => Ok(*n),
+            ComputeUnit::String(s) => Self::parse_string(s),
         }
+    }
+
+    fn parse_string(s: &str) -> Result<i64, String> {
+        let numeric: String = s.chars().take_while(|c| c.is_digit(10)).collect();
+        let unit = s[numeric.len()..].to_lowercase().replace(" ", "");
+        let base: i64 = numeric
+            .parse()
+            .map_err(|e| format!("Invalid number: {}", e))?;
+        Ok(base
+            * match unit.as_str() {
+                "byte" | "bytes" => 1,
+                "kb" | "k" => 1024,
+                "mb" | "m" => 1024 * 1024,
+                "gb" | "g" => 1024 * 1024 * 1024,
+                "tb" | "t" => 1024 * 1024 * 1024 * 1024,
+                "min" => 60,
+                "hr" | "h" => 60 * 60,
+                "day" | "d" => 60 * 60 * 24,
+                "cpu" | "cpus" | "core" | "cores" => 1000,
+                "gpu" | "gpus" => 1000,
+                "mcpu" | "mcpus" | "millicpu" | "millicpus" => 1,
+                "mgpu" | "mgpus" | "milligpu" | "milligpus" => 1,
+                "mcore" | "mcores" | "millicore" | "millicores" => 1,
+                "" => 1,
+                _ => return Err(format!("Invalid unit: {}", unit)),
+            })
     }
 
     pub fn as_string(&self) -> String {
         match self {
-            NumberOrString::Number(n) => n.to_string(),
-            NumberOrString::String(s) => s.clone(),
+            ComputeUnit::Number(n) => n.to_string(),
+            ComputeUnit::String(s) => s.clone(),
         }
     }
 }
 
-impl From<i64> for NumberOrString {
+impl FromStr for ComputeUnit {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let _ = Self::parse_string(s).map_err(|e| e.to_string())?;
+        Ok(ComputeUnit::String(s.to_string()))
+    }
+}
+
+impl From<i64> for ComputeUnit {
     fn from(val: i64) -> Self {
-        NumberOrString::Number(val)
+        ComputeUnit::Number(val)
+    }
+}
+
+impl TryFrom<ComputeUnit> for i64 {
+    type Error = String;
+
+    fn try_from(val: ComputeUnit) -> Result<Self, Self::Error> {
+        match &val {
+            ComputeUnit::Number(n) => Ok(*n),
+            ComputeUnit::String(_) => val.as_number().map_err(|e| e.to_string()),
+        }
     }
 }
 
@@ -694,36 +722,60 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    #[test]
-    fn test_number_or_string() {
-        // Test raw number
-        let num = serde_json::from_value::<NumberOrString>(json!(1234)).unwrap();
-        assert_eq!(num.as_number(), Some(1234));
+    mod compute_unit_tests {
+        use super::*;
 
-        // Test raw number
-        let num = serde_json::from_value::<NumberOrString>(json!("1234")).unwrap();
-        assert_eq!(num.as_number(), Some(1234));
+        #[test]
+        fn test_raw_number_deserialization() {
+            // Test integer number
+            let num = serde_json::from_value::<ComputeUnit>(json!(1234)).unwrap();
+            assert_eq!(num.as_number(), Ok(1234));
 
-        // Test string with kb unit
-        let str = serde_json::from_value::<NumberOrString>(json!("1234kb")).unwrap();
-        assert_eq!(str.as_number(), Some(1234 * 1024));
-        assert_eq!(str.as_string(), "1234kb");
+            // Test string number
+            let num = serde_json::from_value::<ComputeUnit>(json!("1234")).unwrap();
+            assert_eq!(num.as_number(), Ok(1234));
+        }
 
-        // Test string with mb unit
-        let str = serde_json::from_value::<NumberOrString>(json!("1234mb")).unwrap();
-        assert_eq!(str.as_number(), Some(1234 * 1024 * 1024));
-        assert_eq!(str.as_string(), "1234mb");
+        #[test]
+        fn test_unit_deserialization() {
+            // Test kilobytes
+            let str = serde_json::from_value::<ComputeUnit>(json!("1234kb")).unwrap();
+            assert_eq!(str.as_number(), Ok(1234 * 1024));
+            assert_eq!(str.as_string(), "1234kb");
 
-        // Test string with min unit
-        let str = serde_json::from_value::<NumberOrString>(json!("60min")).unwrap();
-        assert_eq!(str.as_number(), Some(60 * 60));
-        assert_eq!(str.as_string(), "60min");
+            // Test megabytes
+            let str = serde_json::from_value::<ComputeUnit>(json!("1234mb")).unwrap();
+            assert_eq!(str.as_number(), Ok(1234 * 1024 * 1024));
+            assert_eq!(str.as_string(), "1234mb");
 
-        let str = serde_json::to_string(&NumberOrString::String("1234kb".to_string())).unwrap();
-        assert_eq!(str, "\"1234kb\"");
+            // Test minutes
+            let str = serde_json::from_value::<ComputeUnit>(json!("60min")).unwrap();
+            assert_eq!(str.as_number(), Ok(60 * 60));
+            assert_eq!(str.as_string(), "60min");
+        }
 
-        let str = serde_json::to_string(&NumberOrString::Number(1234)).unwrap();
-        assert_eq!(str, "1234");
+        #[test]
+        fn test_serialization() {
+            // Test string serialization
+            let str = serde_json::to_string(&ComputeUnit::String("1234kb".to_string())).unwrap();
+            assert_eq!(str, "\"1234kb\"");
+
+            // Test number serialization
+            let str = serde_json::to_string(&ComputeUnit::Number(1234)).unwrap();
+            assert_eq!(str, "1234");
+        }
+
+        #[test]
+        fn test_string_parsing() {
+            // Test valid parse
+            let res: Result<ComputeUnit, _> = "123kb".parse();
+            assert!(res.is_ok());
+            assert_eq!(res.unwrap().as_number(), Ok(123 * 1024));
+
+            // Test invalid parse
+            let res: Result<ComputeUnit, String> = "123 this is wrong".parse();
+            assert!(res.is_err());
+        }
     }
 
     #[test]
@@ -757,19 +809,19 @@ mod tests {
 
         assert_eq!(
             task.spec.resources.cpus,
-            NumberOrString::String("1000mcpu".to_string())
+            ComputeUnit::String("1000mcpu".to_string())
         );
         assert_eq!(
             task.spec.resources.gpus,
-            NumberOrString::String("1000mgpu".to_string())
+            ComputeUnit::String("1000mgpu".to_string())
         );
         assert_eq!(
             task.spec.resources.memory,
-            NumberOrString::String("1024mb".to_string())
+            ComputeUnit::String("1024mb".to_string())
         );
         assert_eq!(
             task.spec.resources.time,
-            NumberOrString::String("1hr".to_string())
+            ComputeUnit::String("1hr".to_string())
         );
     }
 
@@ -802,10 +854,10 @@ mod tests {
         }))
         .unwrap();
 
-        assert_eq!(task.spec.resources.cpus.as_number(), Some(1000));
-        assert_eq!(task.spec.resources.gpus.as_number(), Some(1000));
-        assert_eq!(task.spec.resources.memory.as_number(), Some(1024));
-        assert_eq!(task.spec.resources.time.as_number(), Some(1));
+        assert_eq!(task.spec.resources.cpus.as_number(), Ok(1000));
+        assert_eq!(task.spec.resources.gpus.as_number(), Ok(1000));
+        assert_eq!(task.spec.resources.memory.as_number(), Ok(1024));
+        assert_eq!(task.spec.resources.time.as_number(), Ok(1));
     }
 
     #[test]
@@ -825,13 +877,13 @@ mod tests {
         }))
         .expect("Failed to parse task");
 
-        assert_eq!(task.spec.resources.cpus.as_number(), Some(1000));
-        assert_eq!(task.spec.resources.gpus.as_number(), Some(1000));
+        assert_eq!(task.spec.resources.cpus.as_number(), Ok(1000));
+        assert_eq!(task.spec.resources.gpus.as_number(), Ok(1000));
         assert_eq!(
             task.spec.resources.memory.as_number(),
-            Some(1024 * 1024 * 1024)
+            Ok(1024 * 1024 * 1024)
         );
-        assert_eq!(task.spec.resources.time.as_number(), Some(60 * 60));
+        assert_eq!(task.spec.resources.time.as_number(), Ok(60 * 60));
     }
 
     #[test]
@@ -851,13 +903,13 @@ mod tests {
         )
         .expect("Failed to parse task");
 
-        assert_eq!(task.spec.resources.cpus.as_number(), Some(1000));
-        assert_eq!(task.spec.resources.gpus.as_number(), Some(1000));
+        assert_eq!(task.spec.resources.cpus.as_number(), Ok(1000));
+        assert_eq!(task.spec.resources.gpus.as_number(), Ok(1000));
         assert_eq!(
             task.spec.resources.memory.as_number(),
-            Some(1024 * 1024 * 1024)
+            Ok(1024 * 1024 * 1024)
         );
-        assert_eq!(task.spec.resources.time.as_number(), Some(60 * 60));
+        assert_eq!(task.spec.resources.time.as_number(), Ok(60 * 60));
     }
 
     #[test]
@@ -945,13 +997,13 @@ mod tests {
         assert_eq!(task.spec.output_contexts[0].source, "out1");
         assert_eq!(task.spec.output_contexts[0].retention_period, 100);
 
-        assert_eq!(task.spec.resources.cpus.as_number(), Some(2000));
-        assert_eq!(task.spec.resources.gpus.as_number(), Some(1000));
+        assert_eq!(task.spec.resources.cpus.as_number(), Ok(2000));
+        assert_eq!(task.spec.resources.gpus.as_number(), Ok(1000));
         assert_eq!(
             task.spec.resources.memory.as_number(),
-            Some(2 * 1024 * 1024 * 1024)
+            Ok(2 * 1024 * 1024 * 1024)
         );
-        assert_eq!(task.spec.resources.time.as_number(), Some(3600));
+        assert_eq!(task.spec.resources.time.as_number(), Ok(3600));
 
         assert!(task.spec.store_stdout);
         assert!(task.spec.store_stderr);
@@ -1032,8 +1084,8 @@ mod tests {
 
         // Verify spec
         assert_eq!(pin.spec.cid, Some("test-cid".to_string()));
-        assert_eq!(pin.spec.bytes.as_number(), Some(1234 * 1024));
-        assert_eq!(pin.spec.time.as_number(), Some(24 * 60 * 60));
+        assert_eq!(pin.spec.bytes.as_number(), Ok(1234 * 1024));
+        assert_eq!(pin.spec.time.as_number(), Ok(24 * 60 * 60));
         assert_eq!(pin.spec.redundancy, 3);
         assert_eq!(
             pin.spec.fallback_urls,
@@ -1065,8 +1117,8 @@ mod tests {
         .unwrap();
 
         assert_eq!(pin.spec.cid, Some("test-cid".to_string()));
-        assert_eq!(pin.spec.bytes.as_number(), Some(1234 * 1024));
-        assert_eq!(pin.spec.time.as_number(), Some(24 * 60 * 60));
+        assert_eq!(pin.spec.bytes.as_number(), Ok(1234 * 1024));
+        assert_eq!(pin.spec.time.as_number(), Ok(24 * 60 * 60));
         assert_eq!(pin.spec.redundancy, 1);
         assert_eq!(pin.spec.fallback_urls, None);
     }
