@@ -1,14 +1,14 @@
 //! Workflow model and related types for managing workflow execution.
-//! 
+//!
 //! This module provides the core workflow model used throughout the system, including:
 //! - Workflow specification with stages and tasks
 //! - Status tracking for workflow execution
 //! - Metadata like tags and labels
 //! - Protobuf serialization/deserialization
 
+use super::{Label, Metadata, TaskSpec};
 use crate::proto::gevulot::gevulot;
 use serde::{Deserialize, Serialize};
-use super::{Label, Metadata, TaskSpec};
 
 /// Represents a complete workflow definition with metadata, specification and status
 ///
@@ -23,7 +23,7 @@ use super::{Label, Metadata, TaskSpec};
 ///
 /// let workflow = serde_json::from_str::<Workflow>(r#"{
 ///     "kind": "Workflow",
-///     "version": "v0", 
+///     "version": "v0",
 ///     "metadata": {
 ///         "name": "my-workflow",
 ///         "tags": ["compute"]
@@ -161,7 +161,7 @@ impl From<gevulot::WorkflowStatus> for WorkflowStatus {
             // Map numeric states to human readable strings
             state: match proto.state {
                 0 => "Pending".to_string(),
-                1 => "Running".to_string(), 
+                1 => "Running".to_string(),
                 2 => "Done".to_string(),
                 3 => "Failed".to_string(),
                 _ => "Unknown".to_string(),

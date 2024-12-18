@@ -1,5 +1,5 @@
 //! Task model and related types for managing task execution.
-//! 
+//!
 //! This module provides the core task model used throughout the system, including:
 //! - Task specification and status
 //! - Resource requirements (CPU, GPU, memory, time)
@@ -19,7 +19,7 @@ use super::serialization_helpers::DefaultFactorOneMegabyte;
 /// Creating a basic task:
 /// ```
 /// use crate::models::Task;
-/// 
+///
 /// let task = serde_json::from_str::<Task>(r#"{
 ///     "kind": "Task",
 ///     "version": "v0",
@@ -28,7 +28,7 @@ use super::serialization_helpers::DefaultFactorOneMegabyte;
 ///         "command": ["echo", "hello"],
 ///         "resources": {
 ///             "cpus": "1cpu",
-///             "gpus": "0gpu", 
+///             "gpus": "0gpu",
 ///             "memory": "512mb",
 ///             "time": "1h"
 ///         }
@@ -39,7 +39,7 @@ use super::serialization_helpers::DefaultFactorOneMegabyte;
 /// Task with input/output contexts:
 /// ```
 /// let task = serde_json::from_str::<Task>(r#"{
-///     "kind": "Task", 
+///     "kind": "Task",
 ///     "version": "v0",
 ///     "spec": {
 ///         "image": "processor:v1",
@@ -83,7 +83,7 @@ impl From<gevulot::Task> for Task {
             Some(spec) if !spec.workflow_ref.is_empty() => Some(spec.workflow_ref.clone()),
             _ => None,
         };
-        
+
         Task {
             kind: "Task".to_string(),
             version: "v0".to_string(),
@@ -245,7 +245,7 @@ pub struct OutputContext {
 pub struct TaskResources {
     // CPU cores required (supports units like "2cpu", "500mcpu")
     pub cpus: crate::models::CoreUnit,
-    // GPU cores required (supports units like "1gpu", "500mgpu") 
+    // GPU cores required (supports units like "1gpu", "500mgpu")
     pub gpus: crate::models::CoreUnit,
     // Memory required (supports units like "1gb", "512mb")
     pub memory: crate::models::ByteUnit<DefaultFactorOneMegabyte>, // when no unit is specified, we assume MiB
@@ -430,10 +430,7 @@ mod tests {
 
         assert_eq!(task.spec.resources.cpus.millicores(), Ok(1000));
         assert_eq!(task.spec.resources.gpus.millicores(), Ok(1000));
-        assert_eq!(
-            task.spec.resources.memory.bytes(),
-            Ok(1024 * 1024 * 1024)
-        );
+        assert_eq!(task.spec.resources.memory.bytes(), Ok(1024 * 1024 * 1024));
         assert_eq!(task.spec.resources.time.seconds(), Ok(60 * 60));
     }
 
@@ -456,10 +453,7 @@ mod tests {
 
         assert_eq!(task.spec.resources.cpus.millicores(), Ok(1000));
         assert_eq!(task.spec.resources.gpus.millicores(), Ok(1000));
-        assert_eq!(
-            task.spec.resources.memory.bytes(),
-            Ok(1024 * 1024 * 1024)
-        );
+        assert_eq!(task.spec.resources.memory.bytes(), Ok(1024 * 1024 * 1024));
         assert_eq!(task.spec.resources.time.seconds(), Ok(60 * 60));
     }
 
@@ -482,7 +476,7 @@ mod tests {
                 ],
                 "resources": {
                     "cpus": "1000 MCpu",
-                    "gpus": "1000 MGpu", 
+                    "gpus": "1000 MGpu",
                     "memory": "1024 MiB",
                     "time": "1 hr"
                 }
@@ -490,15 +484,31 @@ mod tests {
         }))
         .expect("Failed to parse task");
 
-        assert_eq!(task.spec.env.iter().find(|e| e.name == "FOO").unwrap().value, "bar");
-        assert_eq!(task.spec.env.iter().find(|e| e.name == "DEBUG").unwrap().value, "1");
+        assert_eq!(
+            task.spec
+                .env
+                .iter()
+                .find(|e| e.name == "FOO")
+                .unwrap()
+                .value,
+            "bar"
+        );
+        assert_eq!(
+            task.spec
+                .env
+                .iter()
+                .find(|e| e.name == "DEBUG")
+                .unwrap()
+                .value,
+            "1"
+        );
     }
 
     #[test]
     fn test_parse_task_with_input_context() {
         let task = serde_json::from_value::<Task>(json!({
             "kind": "Task",
-            "version": "v0", 
+            "version": "v0",
             "spec": {
                 "image": "test",
                 "inputContexts": [
@@ -514,7 +524,7 @@ mod tests {
                 "resources": {
                     "cpus": "1000 MCpu",
                     "gpus": "1000 MGpu",
-                    "memory": "1024 MiB", 
+                    "memory": "1024 MiB",
                     "time": "1 hr"
                 }
             }
@@ -595,7 +605,7 @@ mod tests {
         assert_eq!(task.metadata.tags, vec!["test", "example"]);
         assert_eq!(task.metadata.labels[0].key, "env");
         assert_eq!(task.metadata.labels[0].value, "test");
-        assert_eq!(task.metadata.labels[1].key, "priority"); 
+        assert_eq!(task.metadata.labels[1].key, "priority");
         assert_eq!(task.metadata.labels[1].value, "high");
     }
 }

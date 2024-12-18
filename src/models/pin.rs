@@ -1,5 +1,5 @@
 //! Pin module provides functionality for managing pinned data in the system.
-//! 
+//!
 //! A Pin represents data that should be stored and maintained by workers in the network.
 //! It includes specifications for storage duration, size, redundancy and can reference
 //! data either by CID or fallback URLs.
@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 /// Creating a Pin with CID:
 /// ```
 /// use crate::models::{Pin, PinSpec, Metadata};
-/// 
+///
 /// let pin = Pin {
 ///     kind: "Pin".to_string(),
 ///     version: "v0".to_string(),
@@ -46,7 +46,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// let pin = Pin {
 ///     kind: "Pin".to_string(),
-///     version: "v0".to_string(), 
+///     version: "v0".to_string(),
 ///     metadata: Metadata {
 ///         name: "my-backup".to_string(),
 ///         ..Default::default()
@@ -103,7 +103,7 @@ impl From<gevulot::Pin> for Pin {
                     .as_ref()
                     .map(|m| m.tags.clone())
                     .unwrap_or_default(),
-                labels: proto 
+                labels: proto
                     .metadata
                     .as_ref()
                     .map(|m| m.labels.clone())
@@ -454,7 +454,7 @@ mod tests {
     fn test_pin_with_raw_bytes() {
         // Should accept raw number for bytes field
         let result = serde_json::from_value::<Pin>(json!({
-            "kind": "Pin", 
+            "kind": "Pin",
             "version": "v0",
             "spec": {
                 "cid": "test-cid",
@@ -469,7 +469,7 @@ mod tests {
         // Should accept string number for bytes field
         let result = serde_json::from_value::<Pin>(json!({
             "kind": "Pin",
-            "version": "v0", 
+            "version": "v0",
             "spec": {
                 "cid": "test-cid",
                 "bytes": "1234",

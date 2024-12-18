@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::proto::gevulot::gevulot;
+use serde::{Deserialize, Serialize};
 
 /// Metadata represents common metadata fields used across different resource types.
 ///
@@ -11,7 +11,7 @@ use crate::proto::gevulot::gevulot;
 ///
 /// let metadata = Metadata {
 ///     id: Some("task-123".to_string()),
-///     name: "my-task".to_string(), 
+///     name: "my-task".to_string(),
 ///     creator: Some("alice".to_string()),
 ///     description: "An example task".to_string(),
 ///     tags: vec!["tag1".to_string(), "tag2".to_string()],

@@ -1,14 +1,17 @@
 //! Worker model and related types for managing worker nodes.
-//! 
+//!
 //! This module provides the core worker model used throughout the system, including:
 //! - Worker specification and status
 //! - Resource tracking (CPU, GPU, memory, disk)
 //! - Metadata like tags and labels
 //! - Protobuf serialization/deserialization
 
-use serde::{Deserialize, Serialize};
+use super::{
+    metadata::{Label, Metadata},
+    ByteUnit, CoreUnit, DefaultFactorOneMegabyte,
+};
 use crate::proto::gevulot::gevulot;
-use super::{metadata::{Label, Metadata}, ByteUnit, CoreUnit, DefaultFactorOneMegabyte};
+use serde::{Deserialize, Serialize};
 
 /// Represents a complete worker definition with metadata, specification and status
 ///

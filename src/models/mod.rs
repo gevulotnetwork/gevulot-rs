@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 
 mod serialization_helpers;
@@ -8,16 +7,16 @@ mod metadata;
 pub use metadata::{Label, Metadata};
 
 mod task;
-pub use task::{Task, TaskSpec, TaskStatus, TaskEnv, InputContext, OutputContext, TaskResources};
+pub use task::{InputContext, OutputContext, Task, TaskEnv, TaskResources, TaskSpec, TaskStatus};
 
 mod worker;
 pub use worker::{Worker, WorkerSpec, WorkerStatus};
 
 mod pin;
-pub use pin::{Pin, PinSpec, PinStatus, PinAck};
+pub use pin::{Pin, PinAck, PinSpec, PinStatus};
 
 mod workflow;
-pub use workflow::{Workflow, WorkflowSpec, WorkflowStatus, WorkflowStage, WorkflowStageStatus};
+pub use workflow::{Workflow, WorkflowSpec, WorkflowStage, WorkflowStageStatus, WorkflowStatus};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Generic {

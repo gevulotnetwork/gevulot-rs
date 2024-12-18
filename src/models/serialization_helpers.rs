@@ -1,8 +1,8 @@
 //! Serialization helpers for handling byte sizes, CPU/GPU cores, and time durations.
-//! 
+//!
 //! This module provides types and traits to handle parsing and serialization of:
 //! - Byte sizes (e.g. "500MB", "1.5GB")
-//! - CPU/GPU core counts (e.g. "2 cores", "500mcpu") 
+//! - CPU/GPU core counts (e.g. "2 cores", "500mcpu")
 //! - Time durations (e.g. "24h", "7d")
 
 use std::str::FromStr;
@@ -44,7 +44,7 @@ impl DefaultFactor for DefaultFactorOneGigabyte {
 }
 
 /// Type for handling byte sizes with configurable default factors
-/// 
+///
 /// Supports three formats:
 /// - Raw numbers (e.g. 1024)
 /// - String representations (e.g. "500MB", "1.5GB")
@@ -54,7 +54,7 @@ impl DefaultFactor for DefaultFactorOneGigabyte {
 ///
 /// ```rust
 /// use crate::models::serialization_helpers::{ByteUnit, DefaultFactorOne};
-/// 
+///
 /// // Parse from string
 /// let bytes: ByteUnit = "500MB".parse().unwrap();
 /// assert_eq!(bytes.bytes().unwrap(), 500 * 1024 * 1024);
@@ -65,7 +65,7 @@ impl DefaultFactor for DefaultFactorOneGigabyte {
 /// ```
 #[derive(Debug, Serialize, Deserialize, Eq)]
 #[serde(untagged)]
-pub enum ByteUnit<D: DefaultFactor = DefaultFactorOne>{
+pub enum ByteUnit<D: DefaultFactor = DefaultFactorOne> {
     Number(i64),
     String(String),
     #[serde(skip)]
@@ -82,7 +82,7 @@ impl<D: DefaultFactor> ByteUnit<D> {
                     return Ok(s.parse::<i64>().map_err(|e| e.to_string())? * D::FACTOR);
                 }
                 s.parse::<ByteSize>().map(|b| b.0 as i64)
-            },
+            }
             ByteUnit::Factor(_) => Ok(D::FACTOR),
         }
     }
@@ -147,12 +147,14 @@ impl CoreUnit {
                 let numeric: String = s.chars().take_while(|c| c.is_digit(10)).collect();
                 // Extract and normalize unit part
                 let unit = s[numeric.len()..].to_lowercase().replace(" ", "");
-                let base: i64 = numeric.parse().map_err(|e| format!("Invalid number: {}", e))?;
-                
+                let base: i64 = numeric
+                    .parse()
+                    .map_err(|e| format!("Invalid number: {}", e))?;
+
                 // Convert based on unit, using 1000 millicores = 1 core
                 Ok(base
                     * match unit.as_str() {
-                        "cpu" | "cpus" => 1000, 
+                        "cpu" | "cpus" => 1000,
                         "gpu" | "gpus" => 1000,
                         "core" | "cores" => 1000,
                         "mcpu" | "mcpus" | "millicpu" | "millicpus" => 1,
@@ -177,7 +179,8 @@ impl FromStr for CoreUnit {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let res = CoreUnit::String(s.to_string());
-        res.millicores().map_err(|e| format!("Invalid core size: {}", e))?;
+        res.millicores()
+            .map_err(|e| format!("Invalid core size: {}", e))?;
         Ok(res)
     }
 }
@@ -220,10 +223,10 @@ impl TimeUnit {
         match self {
             TimeUnit::Number(n) => Ok(*n),
             TimeUnit::String(s) => {
-                let duration = humantime::parse_duration(s)
-                    .map_err(|e| format!("Invalid duration: {}", e))?;
+                let duration =
+                    humantime::parse_duration(s).map_err(|e| format!("Invalid duration: {}", e))?;
                 Ok(duration.as_secs() as i64)
-            },
+            }
         }
     }
 }
@@ -238,7 +241,9 @@ impl FromStr for TimeUnit {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let _ = s.parse::<humantime::Duration>().map_err(|e| format!("Invalid duration: {}", e))?;
+        let _ = s
+            .parse::<humantime::Duration>()
+            .map_err(|e| format!("Invalid duration: {}", e))?;
         Ok(TimeUnit::String(s.to_string()))
     }
 }
@@ -263,25 +268,61 @@ mod tests {
     #[test]
     fn test_byte_unit_default_factor() {
         let bytes: ByteUnit = 1.into();
-        assert_eq!(bytes.bytes(), Ok(1), "Default factor should be 1 (no multiplication)");
+        assert_eq!(
+            bytes.bytes(),
+            Ok(1),
+            "Default factor should be 1 (no multiplication)"
+        );
         let bytes: ByteUnit<DefaultFactorOneKilobyte> = 1.into();
-        assert_eq!(bytes.bytes(), Ok(1 * 1024), "1 with KB factor should be 1024 bytes");
+        assert_eq!(
+            bytes.bytes(),
+            Ok(1 * 1024),
+            "1 with KB factor should be 1024 bytes"
+        );
         let bytes: ByteUnit<DefaultFactorOneMegabyte> = 1.into();
-        assert_eq!(bytes.bytes(), Ok(1 * 1024 * 1024), "1 with MB factor should be 1024*1024 bytes");
+        assert_eq!(
+            bytes.bytes(),
+            Ok(1 * 1024 * 1024),
+            "1 with MB factor should be 1024*1024 bytes"
+        );
         let bytes: ByteUnit<DefaultFactorOneGigabyte> = 1.into();
-        assert_eq!(bytes.bytes(), Ok(1 * 1024 * 1024 * 1024), "1 with GB factor should be 1024*1024*1024 bytes");
+        assert_eq!(
+            bytes.bytes(),
+            Ok(1 * 1024 * 1024 * 1024),
+            "1 with GB factor should be 1024*1024*1024 bytes"
+        );
 
         let bytes: ByteUnit = "1".parse().unwrap();
-        assert_eq!(bytes.bytes(), Ok(1), "String '1' with default factor should be 1 byte");
+        assert_eq!(
+            bytes.bytes(),
+            Ok(1),
+            "String '1' with default factor should be 1 byte"
+        );
         let bytes: ByteUnit<DefaultFactorOneKilobyte> = "1".parse().unwrap();
-        assert_eq!(bytes.bytes(), Ok(1 * 1024), "String '1' with KB factor should be 1024 bytes");
+        assert_eq!(
+            bytes.bytes(),
+            Ok(1 * 1024),
+            "String '1' with KB factor should be 1024 bytes"
+        );
         let bytes: ByteUnit<DefaultFactorOneMegabyte> = "1".parse().unwrap();
-        assert_eq!(bytes.bytes(), Ok(1 * 1024 * 1024), "String '1' with MB factor should be 1024*1024 bytes");
+        assert_eq!(
+            bytes.bytes(),
+            Ok(1 * 1024 * 1024),
+            "String '1' with MB factor should be 1024*1024 bytes"
+        );
         let bytes: ByteUnit<DefaultFactorOneGigabyte> = "1".parse().unwrap();
-        assert_eq!(bytes.bytes(), Ok(1 * 1024 * 1024 * 1024), "String '1' with GB factor should be 1024*1024*1024 bytes");
+        assert_eq!(
+            bytes.bytes(),
+            Ok(1 * 1024 * 1024 * 1024),
+            "String '1' with GB factor should be 1024*1024*1024 bytes"
+        );
 
         let bytes: ByteUnit<DefaultFactorOneKilobyte> = "1MiB".parse().unwrap();
-        assert_eq!(bytes.bytes(), Ok(1 * 1024 * 1024), "Explicit unit (1MiB) should override default factor (KB)");
+        assert_eq!(
+            bytes.bytes(),
+            Ok(1 * 1024 * 1024),
+            "Explicit unit (1MiB) should override default factor (KB)"
+        );
     }
 
     #[test]
