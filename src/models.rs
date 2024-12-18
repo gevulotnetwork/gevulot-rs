@@ -700,7 +700,7 @@ impl FromStr for ComputeUnit {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let _ = Self::parse_string(s).map_err(|e| e.to_string())?;
+        let _ = Self::parse_string(s)?;
         Ok(ComputeUnit::String(s.to_string()))
     }
 }
@@ -717,7 +717,7 @@ impl TryFrom<ComputeUnit> for i64 {
     fn try_from(val: ComputeUnit) -> Result<Self, Self::Error> {
         match &val {
             ComputeUnit::Number(n) => Ok(*n),
-            ComputeUnit::String(_) => val.as_number().map_err(|e| e.to_string()),
+            ComputeUnit::String(_) => val.as_number(),
         }
     }
 }
