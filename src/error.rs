@@ -22,8 +22,8 @@ pub enum Error {
     Parse(String),
     #[error("tendermint error: {0}")]
     Tendermint(#[from] tendermint::Error),
-    #[error("tx failed with code {0}: {1}")]
-    Tx(u32, String),
+    #[error("tx {0} failed with code {1}: {2}")]
+    Tx(String, u32, String),
     #[error("unknown error: {0}")]
     Unknown(String),
 }

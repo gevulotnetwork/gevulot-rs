@@ -380,9 +380,13 @@ impl BaseClient {
     ///
     /// An empty Result or a Tx error.
     fn assert_tx_success(tx_response: &TxResponse) -> Result<()> {
-        let (tx_code, raw_log) = (tx_response.code, tx_response.raw_log.to_owned());
+        let (tx_hash, tx_code, raw_log) = (
+            tx_response.txhash.to_owned(),
+            tx_response.code,
+            tx_response.raw_log.to_owned(),
+        );
         if tx_code != 0 {
-            return Err(Error::Tx(tx_code, raw_log));
+            return Err(Error::Tx(tx_hash, tx_code, raw_log));
         }
 
         Ok(())
