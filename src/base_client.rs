@@ -363,6 +363,10 @@ impl BaseClient {
         self.wait_for_tx(&hash, Some(tokio::time::Duration::from_secs(10)))
             .await?;
         let tx_response: TxResponse = self.get_tx_response(&hash).await?;
+        let (tx_code, raw_log) = (tx_response.code, tx_response.raw_log);
+        if tx_code != 0 {
+            return Err(Error::Tx(tx_code, raw_log));
+        }
         let tx_msg_data = cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxMsgData::decode(
             &*hex::decode(tx_response.data)?,
         )?;
