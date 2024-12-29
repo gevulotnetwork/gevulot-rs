@@ -331,12 +331,7 @@ impl BaseClient {
         let resp = resp.into_inner();
         log::debug!("broadcast_tx response: {:#?}", resp);
         let tx_response = resp.tx_response.ok_or("Tx response not found")?;
-        if tx_response.code != 0 {
-            return Err(Error::Unknown(format!(
-                "Transaction failed with code: {} ({})",
-                tx_response.code, tx_response.raw_log
-            )));
-        }
+        Self::assert_tx_success(&tx_response)?;
 
         // Bump up the local account sequence after successful tx.
         self.account_sequence = Some(sequence + 1);
