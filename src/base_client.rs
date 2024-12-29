@@ -363,10 +363,7 @@ impl BaseClient {
         self.wait_for_tx(&hash, Some(tokio::time::Duration::from_secs(10)))
             .await?;
         let tx_response: TxResponse = self.get_tx_response(&hash).await?;
-        let (tx_code, raw_log) = (tx_response.code, tx_response.raw_log);
-        if tx_code != 0 {
-            return Err(Error::Tx(tx_code, raw_log));
-        }
+        Self::assert_tx_success(&tx_response)?;
         let tx_msg_data = cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxMsgData::decode(
             &*hex::decode(tx_response.data)?,
         )?;
@@ -376,6 +373,24 @@ impl BaseClient {
             let msg_response = &tx_msg_data.msg_responses[0];
             Ok(R::decode(&msg_response.value[..])?)
         }
+    }
+
+    /// Checks if Tx did not failed with non-zero code.
+    ///
+    /// # Arguments
+    ///
+    /// * `tx_response` - TxResponse.
+    ///
+    /// # Returns
+    ///
+    /// An empty Result or a Tx error.
+    fn assert_tx_success(tx_response: &TxResponse) -> Result<()> {
+        let (tx_code, raw_log) = (tx_response.code, tx_response.raw_log.to_owned());
+        if tx_code != 0 {
+            return Err(Error::Tx(tx_code, raw_log));
+        }
+
+        Ok(())
     }
 
     /// Retrieves the latest block from the blockchain.
