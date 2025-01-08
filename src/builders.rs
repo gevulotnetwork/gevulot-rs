@@ -436,3 +436,19 @@ impl MsgSudoFreezeAccountBuilder {
         })
     }
 }
+
+#[derive(Builder)]
+pub struct MsgRescheduleTask {
+    pub creator: String,
+    pub task_id: String,
+}
+
+impl MsgRescheduleTaskBuilder {
+    pub fn into_message(&self) -> Result<gevulot::MsgRescheduleTask> {
+        let msg = self.build().map_err(|e| Error::EncodeError(e.to_string()))?;
+        Ok(gevulot::MsgRescheduleTask {
+            creator: msg.creator,
+            id: msg.task_id,
+        })
+    }
+}
