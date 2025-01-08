@@ -789,7 +789,7 @@ mod tests {
             assert_eq!(event.block_height, Height::from(1000u32));
             assert_eq!(event.cid, "QmYwMXeEc3Z64vqcPXx8p8Y8Y5tE9Y5sYW42FZ1U87Y");
             assert_eq!(event.worker_id, "worker1");
-            assert_eq!(event.success, true);
+            assert!(event.success);
             assert_eq!(event.id, "123");
         } else {
             panic!("Unexpected event type");

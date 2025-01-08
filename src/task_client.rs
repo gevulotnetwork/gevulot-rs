@@ -7,7 +7,7 @@ use crate::{
     proto::gevulot::gevulot::{
         MsgAcceptTask, MsgAcceptTaskResponse, MsgCreateTask, MsgCreateTaskResponse, MsgDeclineTask,
         MsgDeclineTaskResponse, MsgDeleteTask, MsgDeleteTaskResponse, MsgFinishTask,
-        MsgFinishTaskResponse,
+        MsgFinishTaskResponse, MsgRescheduleTask, MsgRescheduleTaskResponse,
     },
 };
 
@@ -184,6 +184,28 @@ impl TaskClient {
     /// This function will return an error if the request to the Gevulot client fails.
     pub async fn finish(&mut self, msg: MsgFinishTask) -> Result<MsgFinishTaskResponse> {
         let resp: MsgFinishTaskResponse = self
+            .base_client
+            .write()
+            .await
+            .send_msg_sync(msg, "")
+            .await?;
+        Ok(resp)
+    }
+
+    /// Reschedules a task.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the task ID to reschedule.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the response or an error.
+    pub async fn reschedule(
+        &mut self,
+        msg: MsgRescheduleTask,
+    ) -> Result<MsgRescheduleTaskResponse> {
+        let resp: MsgRescheduleTaskResponse = self
             .base_client
             .write()
             .await

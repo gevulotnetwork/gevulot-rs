@@ -305,7 +305,7 @@ mod tests {
         assert_eq!(result.mounts[0].fstype, None);
         assert_eq!(result.mounts[0].flags, None);
         assert_eq!(result.mounts[0].data, None);
-        assert_eq!(result.default_mounts, true);
+        assert!(result.default_mounts);
         assert_eq!(result.kernel_modules, vec!["nvidia".to_string()]);
         assert_eq!(result.debug_exit, Some(DebugExit::default_x86()));
         assert_eq!(result.bootcmd, vec![vec!["echo", "booting"]]);
