@@ -28,6 +28,7 @@ service Msg {
   rpc DeleteWorker       (MsgDeleteWorker      ) returns (MsgDeleteWorkerResponse      );
   rpc CreateTask         (MsgCreateTask        ) returns (MsgCreateTaskResponse        );
   rpc DeleteTask         (MsgDeleteTask        ) returns (MsgDeleteTaskResponse        );
+  rpc RescheduleTask     (MsgRescheduleTask    ) returns (MsgRescheduleTaskResponse    );
   rpc CreateWorkflow     (MsgCreateWorkflow    ) returns (MsgCreateWorkflowResponse    );
   rpc DeleteWorkflow     (MsgDeleteWorkflow    ) returns (MsgDeleteWorkflowResponse    );
   rpc CreateProof        (MsgCreateProof       ) returns (MsgCreateProofResponse       );
@@ -168,6 +169,17 @@ message MsgDeleteTask {
 }
 
 message MsgDeleteTaskResponse {}
+
+message MsgRescheduleTask {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string id      = 2;
+}
+
+message MsgRescheduleTaskResponse {
+  string primary = 1;
+  string secondary = 2;
+}
 
 message MsgCreateWorkflow {
   option (cosmos.msg.v1.signer) = "creator";
