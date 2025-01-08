@@ -46,15 +46,11 @@ impl Signer {
         derivation: Option<&str>,
         password: Option<&str>,
     ) -> Result<(SigningKey, PublicKey, AccountId)> {
-        let derivation = if let Some(derivation) = derivation {
-            derivation
-        } else {
-            "m/44'/118'/0'/0/0"
-        };
+        let derivation = derivation.unwrap_or("m/44'/118'/0'/0/0");
 
         let mnemonic = Mnemonic::new(phrase, Language::English)?;
         let pri = XPrv::derive_from_path(
-            &mnemonic.to_seed(password.unwrap_or("")),
+            mnemonic.to_seed(password.unwrap_or("")),
             &derivation.parse()?,
         )?;
         let private_key = SigningKey::from(pri);

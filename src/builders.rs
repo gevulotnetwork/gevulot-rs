@@ -445,7 +445,9 @@ pub struct MsgRescheduleTask {
 
 impl MsgRescheduleTaskBuilder {
     pub fn into_message(&self) -> Result<gevulot::MsgRescheduleTask> {
-        let msg = self.build().map_err(|e| Error::EncodeError(e.to_string()))?;
+        let msg = self
+            .build()
+            .map_err(|e| Error::EncodeError(e.to_string()))?;
         Ok(gevulot::MsgRescheduleTask {
             creator: msg.creator,
             id: msg.task_id,

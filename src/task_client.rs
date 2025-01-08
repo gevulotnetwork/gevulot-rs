@@ -201,7 +201,10 @@ impl TaskClient {
     /// # Returns
     ///
     /// A Result containing the response or an error.
-    pub async fn reschedule(&mut self, msg: MsgRescheduleTask) -> Result<MsgRescheduleTaskResponse> {
+    pub async fn reschedule(
+        &mut self,
+        msg: MsgRescheduleTask,
+    ) -> Result<MsgRescheduleTaskResponse> {
         let resp: MsgRescheduleTaskResponse = self
             .base_client
             .write()
