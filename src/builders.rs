@@ -454,3 +454,21 @@ impl MsgRescheduleTaskBuilder {
         })
     }
 }
+
+#[derive(Builder)]
+pub struct MsgDeleteTask {
+    pub creator: String,
+    pub id: String,
+}
+
+impl MsgDeleteTaskBuilder {
+    pub fn into_message(&self) -> Result<gevulot::MsgDeleteTask> {
+        let msg = self
+            .build()
+            .map_err(|e| Error::EncodeError(e.to_string()))?;
+        Ok(gevulot::MsgDeleteTask {
+            creator: msg.creator,
+            id: msg.id,
+        })
+    }
+}
