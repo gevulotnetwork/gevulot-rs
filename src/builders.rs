@@ -463,7 +463,9 @@ pub struct MsgDeleteTask {
 
 impl MsgDeleteTaskBuilder {
     pub fn into_message(&self) -> Result<gevulot::MsgDeleteTask> {
-        let msg = self.build().map_err(|e| Error::EncodeError(e.to_string()))?;
+        let msg = self
+            .build()
+            .map_err(|e| Error::EncodeError(e.to_string()))?;
         Ok(gevulot::MsgDeleteTask {
             creator: msg.creator,
             id: msg.id,
