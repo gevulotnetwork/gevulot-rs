@@ -35,8 +35,17 @@ fn main() {
             .compile_with_config(config, &protos, &includes)
             .unwrap();
     } else {
+        // There is a bug in `tonic-buf-build` that causes build to always rerun.
+        // We workaround this by emmiting valid rerun-s manually.
+        // See https://github.com/Valensas/tonic-buf-build/issues/7.
+        const TONIC_RERUN_IF_CHANGED: bool = false;
+        println!("cargo:rerun-if-changed=proto");
+
         tonic_buf_build::compile_from_buf_workspace(
-            tonic_build::configure().build_client(true).out_dir(out_dir),
+            tonic_build::configure()
+                .build_client(true)
+                .emit_rerun_if_changed(TONIC_RERUN_IF_CHANGED)
+                .out_dir(out_dir),
             Some(config),
         )
         .unwrap();
