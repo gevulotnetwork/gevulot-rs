@@ -4,12 +4,18 @@ use tokio::sync::RwLock;
 use crate::{
     base_client::BaseClient,
     error::{Error, Result},
-    proto::gevulot::gevulot::{
-        MsgAnnounceWorkerExit, MsgAnnounceWorkerExitResponse, MsgCreateWorker,
-        MsgCreateWorkerResponse, MsgDeleteWorker, MsgDeleteWorkerResponse, MsgUpdateWorker,
-        MsgUpdateWorkerResponse,
+    proto::{
+        cosmos::base::query::v1beta1::PageRequest,
+        gevulot::gevulot::{
+            MsgAnnounceWorkerExit, MsgAnnounceWorkerExitResponse, MsgCreateWorker,
+            MsgCreateWorkerResponse, MsgDeleteWorker, MsgDeleteWorkerResponse, MsgUpdateWorker,
+            MsgUpdateWorkerResponse, QueryAllWorkerRequest,
+        },
     },
 };
+
+/// Default page size for pagination.
+const PAGE_SIZE: u64 = 100;
 
 /// Client for managing workers in the Gevulot system.
 #[derive(Debug, Clone)]
@@ -41,15 +47,43 @@ impl WorkerClient {
     ///
     /// This function will return an error if the request to the Gevulot client fails.
     pub async fn list(&mut self) -> Result<Vec<crate::proto::gevulot::gevulot::Worker>> {
-        let request = crate::proto::gevulot::gevulot::QueryAllWorkerRequest { pagination: None };
-        let response = self
-            .base_client
-            .write()
-            .await
-            .gevulot_client
-            .worker_all(request)
-            .await?;
-        Ok(response.into_inner().worker)
+        let mut all_workers = Vec::new();
+        let mut next_key: Option<Vec<u8>> = None;
+
+        loop {
+            // Construct request with pagination for the current page.
+            let pagination = Some(PageRequest {
+                key: next_key.unwrap_or_default(),
+                limit: PAGE_SIZE,
+                ..Default::default()
+            });
+            let request = QueryAllWorkerRequest { pagination };
+
+            let response = self
+                .base_client
+                .write()
+                .await
+                .gevulot_client
+                .worker_all(request)
+                .await?;
+
+            let inner = response.into_inner();
+            all_workers.extend(inner.worker);
+
+            // Handle next page.
+            next_key = inner.pagination.and_then(|p| {
+                if p.next_key.is_empty() {
+                    None
+                } else {
+                    Some(p.next_key)
+                }
+            });
+            if next_key.is_none() {
+                break;
+            }
+        }
+
+        Ok(all_workers)
     }
 
     /// Gets a worker by its ID.
