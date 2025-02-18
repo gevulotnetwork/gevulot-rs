@@ -32,6 +32,7 @@ pub struct GevulotClientBuilder {
     gas_price: f64,
     gas_multiplier: f64,
     mnemonic: Option<String>,
+    private_key: Option<String>,
     password: Option<String>,
 }
 
@@ -43,6 +44,7 @@ impl Default for GevulotClientBuilder {
             gas_price: 0.025,
             gas_multiplier: 1.2,
             mnemonic: None,
+            private_key: None,
             password: None,
         }
     }
@@ -78,6 +80,12 @@ impl GevulotClientBuilder {
         self
     }
 
+    /// Sets the hex-encoded private key for the GevulotClient
+    pub fn private_key(mut self, private_key: &str) -> Self {
+        self.private_key = Some(private_key.to_string());
+        self
+    }
+
     /// Sets the password for the GevulotClient
     pub fn password(mut self, password: &str) -> Self {
         self.password = Some(password.to_string());
@@ -97,6 +105,8 @@ impl GevulotClientBuilder {
                 .write()
                 .await
                 .set_mnemonic(&mnemonic, self.password.as_deref())?;
+        } else if let Some(private_key) = self.private_key {
+            base_client.write().await.set_private_key(&private_key)?;
         }
 
         // Create and return the GevulotClient with the initialized clients

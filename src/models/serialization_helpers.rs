@@ -144,7 +144,7 @@ impl CoreUnit {
             CoreUnit::Number(n) => Ok(*n * 1000), // Default factor without unit is 1000
             CoreUnit::String(s) => {
                 // Extract numeric part
-                let numeric: String = s.chars().take_while(|c| c.is_digit(10)).collect();
+                let numeric: String = s.chars().take_while(|c| c.is_ascii_digit()).collect();
                 // Extract and normalize unit part
                 let unit = s[numeric.len()..].to_lowercase().replace(" ", "");
                 let base: i64 = numeric
@@ -276,19 +276,19 @@ mod tests {
         let bytes: ByteUnit<DefaultFactorOneKilobyte> = 1.into();
         assert_eq!(
             bytes.bytes(),
-            Ok(1 * 1024),
+            Ok(1024),
             "1 with KB factor should be 1024 bytes"
         );
         let bytes: ByteUnit<DefaultFactorOneMegabyte> = 1.into();
         assert_eq!(
             bytes.bytes(),
-            Ok(1 * 1024 * 1024),
+            Ok(1024 * 1024),
             "1 with MB factor should be 1024*1024 bytes"
         );
         let bytes: ByteUnit<DefaultFactorOneGigabyte> = 1.into();
         assert_eq!(
             bytes.bytes(),
-            Ok(1 * 1024 * 1024 * 1024),
+            Ok(1024 * 1024 * 1024),
             "1 with GB factor should be 1024*1024*1024 bytes"
         );
 
@@ -301,26 +301,26 @@ mod tests {
         let bytes: ByteUnit<DefaultFactorOneKilobyte> = "1".parse().unwrap();
         assert_eq!(
             bytes.bytes(),
-            Ok(1 * 1024),
+            Ok(1024),
             "String '1' with KB factor should be 1024 bytes"
         );
         let bytes: ByteUnit<DefaultFactorOneMegabyte> = "1".parse().unwrap();
         assert_eq!(
             bytes.bytes(),
-            Ok(1 * 1024 * 1024),
+            Ok(1024 * 1024),
             "String '1' with MB factor should be 1024*1024 bytes"
         );
         let bytes: ByteUnit<DefaultFactorOneGigabyte> = "1".parse().unwrap();
         assert_eq!(
             bytes.bytes(),
-            Ok(1 * 1024 * 1024 * 1024),
+            Ok(1024 * 1024 * 1024),
             "String '1' with GB factor should be 1024*1024*1024 bytes"
         );
 
         let bytes: ByteUnit<DefaultFactorOneKilobyte> = "1MiB".parse().unwrap();
         assert_eq!(
             bytes.bytes(),
-            Ok(1 * 1024 * 1024),
+            Ok(1024 * 1024),
             "Explicit unit (1MiB) should override default factor (KB)"
         );
     }
