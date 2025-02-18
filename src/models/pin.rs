@@ -375,7 +375,7 @@ mod tests {
         assert_eq!(status.worker_acks.len(), 2);
         assert_eq!(status.worker_acks[0].worker, "worker1");
         assert_eq!(status.worker_acks[0].block_height, 1000);
-        assert_eq!(status.worker_acks[0].success, true);
+        assert!(status.worker_acks[0].success);
         assert_eq!(status.worker_acks[0].error, None);
         assert_eq!(status.cid, Some("test-cid".to_string()));
     }
