@@ -234,4 +234,17 @@ impl GevulotSigner {
     pub fn address(&self) -> &AccountId {
         &self.0.public_address
     }
+
+    /// Creates a new GevulotSigner from a signing key
+    pub fn from_signing_key(signing_key: cosmrs::crypto::secp256k1::SigningKey) -> Result<Self> {
+        let public_key = signing_key.public_key();
+        let public_address = public_key.account_id("gvlt")?;
+
+        Ok(Self(Signer {
+            mnemonic: None,
+            public_address,
+            private_key: signing_key,
+            public_key,
+        }))
+    }
 }
