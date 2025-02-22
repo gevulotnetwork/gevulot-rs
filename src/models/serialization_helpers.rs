@@ -12,35 +12,35 @@ use serde::{Deserialize, Serialize};
 
 /// Trait for specifying default multiplication factors for byte units
 pub trait DefaultFactor {
-    const FACTOR: i64;
+    const FACTOR: u64;
 }
 
 /// Default factor of 1 (no multiplication)
 #[derive(Debug)]
 pub struct DefaultFactorOne;
 impl DefaultFactor for DefaultFactorOne {
-    const FACTOR: i64 = 1;
+    const FACTOR: u64 = 1;
 }
 
 /// Default factor of 1KB (1024 bytes)
 #[derive(Debug)]
 pub struct DefaultFactorOneKilobyte;
 impl DefaultFactor for DefaultFactorOneKilobyte {
-    const FACTOR: i64 = 1024;
+    const FACTOR: u64 = 1024;
 }
 
 /// Default factor of 1MB (1024 * 1024 bytes)
 #[derive(Debug)]
 pub struct DefaultFactorOneMegabyte;
 impl DefaultFactor for DefaultFactorOneMegabyte {
-    const FACTOR: i64 = 1024 * 1024;
+    const FACTOR: u64 = 1024 * 1024;
 }
 
 /// Default factor of 1GB (1024 * 1024 * 1024 bytes)
 #[derive(Debug)]
 pub struct DefaultFactorOneGigabyte;
 impl DefaultFactor for DefaultFactorOneGigabyte {
-    const FACTOR: i64 = 1024 * 1024 * 1024;
+    const FACTOR: u64 = 1024 * 1024 * 1024;
 }
 
 /// Type for handling byte sizes with configurable default factors
@@ -66,7 +66,7 @@ impl DefaultFactor for DefaultFactorOneGigabyte {
 #[derive(Debug, Serialize, Deserialize, Eq)]
 #[serde(untagged)]
 pub enum ByteUnit<D: DefaultFactor = DefaultFactorOne> {
-    Number(i64),
+    Number(u64),
     String(String),
     #[serde(skip)]
     Factor(std::marker::PhantomData<D>),
@@ -74,14 +74,14 @@ pub enum ByteUnit<D: DefaultFactor = DefaultFactorOne> {
 
 impl<D: DefaultFactor> ByteUnit<D> {
     /// Convert to number of bytes
-    pub fn bytes(&self) -> Result<i64, String> {
+    pub fn bytes(&self) -> Result<u64, String> {
         match self {
             ByteUnit::Number(n) => Ok(*n * D::FACTOR),
             ByteUnit::String(s) => {
                 if s.chars().all(|c| c.is_ascii_digit()) {
-                    return Ok(s.parse::<i64>().map_err(|e| e.to_string())? * D::FACTOR);
+                    return Ok(s.parse::<u64>().map_err(|e| e.to_string())? * D::FACTOR);
                 }
-                s.parse::<ByteSize>().map(|b| b.0 as i64)
+                s.parse::<ByteSize>().map(|b| b.as_u64())
             }
             ByteUnit::Factor(_) => Ok(D::FACTOR),
         }
@@ -103,8 +103,8 @@ impl<D: DefaultFactor> FromStr for ByteUnit<D> {
     }
 }
 
-impl<D: DefaultFactor> From<i64> for ByteUnit<D> {
-    fn from(n: i64) -> Self {
+impl<D: DefaultFactor> From<u64> for ByteUnit<D> {
+    fn from(n: u64) -> Self {
         ByteUnit::Number(n)
     }
 }
@@ -133,13 +133,13 @@ impl<D: DefaultFactor> From<i64> for ByteUnit<D> {
 #[derive(Debug, Serialize, Deserialize, Eq)]
 #[serde(untagged)]
 pub enum CoreUnit {
-    Number(i64),
+    Number(u64),
     String(String),
 }
 
 impl CoreUnit {
     /// Convert to millicores (1 core = 1000 millicores)
-    pub fn millicores(&self) -> Result<i64, String> {
+    pub fn millicores(&self) -> Result<u64, String> {
         match self {
             CoreUnit::Number(n) => Ok(*n * 1000), // Default factor without unit is 1000
             CoreUnit::String(s) => {
@@ -147,7 +147,7 @@ impl CoreUnit {
                 let numeric: String = s.chars().take_while(|c| c.is_digit(10)).collect();
                 // Extract and normalize unit part
                 let unit = s[numeric.len()..].to_lowercase().replace(" ", "");
-                let base: i64 = numeric
+                let base: u64 = numeric
                     .parse()
                     .map_err(|e| format!("Invalid number: {}", e))?;
 
@@ -185,8 +185,8 @@ impl FromStr for CoreUnit {
     }
 }
 
-impl From<i64> for CoreUnit {
-    fn from(n: i64) -> Self {
+impl From<u64> for CoreUnit {
+    fn from(n: u64) -> Self {
         CoreUnit::Number(n)
     }
 }
@@ -213,19 +213,19 @@ impl From<i64> for CoreUnit {
 #[derive(Debug, Serialize, Deserialize, Eq)]
 #[serde(untagged)]
 pub enum TimeUnit {
-    Number(i64),
+    Number(u64),
     String(String),
 }
 
 impl TimeUnit {
     /// Convert to seconds
-    pub fn seconds(&self) -> Result<i64, String> {
+    pub fn seconds(&self) -> Result<u64, String> {
         match self {
             TimeUnit::Number(n) => Ok(*n),
             TimeUnit::String(s) => {
                 let duration =
                     humantime::parse_duration(s).map_err(|e| format!("Invalid duration: {}", e))?;
-                Ok(duration.as_secs() as i64)
+                Ok(duration.as_secs() as u64)
             }
         }
     }
@@ -248,8 +248,8 @@ impl FromStr for TimeUnit {
     }
 }
 
-impl From<i64> for TimeUnit {
-    fn from(n: i64) -> Self {
+impl From<u64> for TimeUnit {
+    fn from(n: u64) -> Self {
         TimeUnit::Number(n)
     }
 }
