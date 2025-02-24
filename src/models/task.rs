@@ -18,7 +18,7 @@ use super::serialization_helpers::DefaultFactorOneMegabyte;
 ///
 /// Creating a basic task:
 /// ```
-/// use crate::models::Task;
+/// use gevulot_rs::models::Task;
 ///
 /// let task = serde_json::from_str::<Task>(r#"{
 ///     "kind": "Task",
@@ -38,6 +38,8 @@ use super::serialization_helpers::DefaultFactorOneMegabyte;
 ///
 /// Task with input/output contexts:
 /// ```
+/// use gevulot_rs::models::Task;
+///
 /// let task = serde_json::from_str::<Task>(r#"{
 ///     "kind": "Task",
 ///     "version": "v0",
@@ -130,7 +132,7 @@ impl From<gevulot::Task> for Task {
 ///
 /// Basic spec with just image and resources:
 /// ```
-/// use crate::models::TaskSpec;
+/// use gevulot_rs::models::TaskSpec;
 ///
 /// let spec = serde_json::from_str::<TaskSpec>(r#"{
 ///     "image": "ubuntu:latest",
