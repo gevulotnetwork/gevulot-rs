@@ -41,8 +41,5 @@ jobs:
       - name: Run linting
         run: cargo clippy --locked --no-deps -- --deny warnings
 
-      - name: Run runtime-config tests
-        run: cargo test --locked runtime_config
-
-      - name: Run events tests
-        run: cargo test --locked events
+      - name: Run tests
+        run: cargo test --locked
