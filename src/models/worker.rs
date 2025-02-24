@@ -19,14 +19,21 @@ use serde::{Deserialize, Serialize};
 ///
 /// Creating a basic worker:
 /// ```
-/// use crate::models::Worker;
-/// CoreUnit
+/// use gevulot_rs::models::Worker;
+///
 /// let worker = serde_json::from_str::<Worker>(r#"{
 ///     "kind": "Worker",
 ///     "version": "v0",
 ///     "metadata": {
 ///         "name": "worker-1",
-///         "tags": ["compute"]
+///         "tags": ["compute"],
+///         "description": "Worker #1",
+///         "labels": [
+///             {
+///                 "key": "my-key",
+///                 "value": "my-label"
+///             }
+///         ]
 ///     },
 ///     "spec": {
 ///         "cpus": "8 cores",
@@ -39,12 +46,13 @@ use serde::{Deserialize, Serialize};
 ///
 /// Converting from protobuf:
 /// ```
-/// use crate::proto::gevulot::gevulot;
-/// use crate::models::Worker;
+/// use gevulot_rs::proto::gevulot::gevulot;
+/// use gevulot_rs::models::Worker;
 ///
 /// let proto_worker = gevulot::Worker {
 ///     metadata: Some(gevulot::Metadata {
 ///         name: "worker-1".to_string(),
+///         desc: "Worker #1".to_string(),
 ///         ..Default::default()
 ///     }),
 ///     spec: Some(gevulot::WorkerSpec {

@@ -74,11 +74,11 @@ impl DefaultFactor for DefaultFactorOneGibibyte {
 /// # Examples
 ///
 /// ```rust
-/// use crate::models::serialization_helpers::{ByteUnit, DefaultFactorOne};
+/// use gevulot_rs::models::{ByteUnit, DefaultFactorOneMegabyte};
 ///
 /// // Parse from string
 /// let bytes: ByteUnit = "500MB".parse().unwrap();
-/// assert_eq!(bytes.bytes().unwrap(), 500 * 1024 * 1024);
+/// assert_eq!(bytes.bytes().unwrap(), 500 * 1000 * 1000);
 ///
 /// // Use raw number
 /// let bytes = ByteUnit::<DefaultFactorOneMegabyte>::from(1);
@@ -141,7 +141,7 @@ impl<D: DefaultFactor> From<u64> for ByteUnit<D> {
 /// # Examples
 ///
 /// ```rust
-/// use crate::models::serialization_helpers::CoreUnit;
+/// use gevulot_rs::models::CoreUnit;
 ///
 /// // Parse core counts
 /// let cores: CoreUnit = "2 cores".parse().unwrap();
@@ -221,7 +221,7 @@ impl From<u64> for CoreUnit {
 /// # Examples
 ///
 /// ```rust
-/// use crate::models::serialization_helpers::TimeUnit;
+/// use gevulot_rs::models::TimeUnit;
 ///
 /// // Parse durations
 /// let time: TimeUnit = "24h".parse().unwrap();
