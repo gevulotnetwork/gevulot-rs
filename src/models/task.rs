@@ -18,7 +18,7 @@ use super::serialization_helpers::DefaultFactorOneMegabyte;
 ///
 /// Creating a basic task:
 /// ```
-/// use crate::models::Task;
+/// use gevulot_rs::models::Task;
 ///
 /// let task = serde_json::from_str::<Task>(r#"{
 ///     "kind": "Task",
@@ -38,6 +38,8 @@ use super::serialization_helpers::DefaultFactorOneMegabyte;
 ///
 /// Task with input/output contexts:
 /// ```
+/// use gevulot_rs::models::Task;
+///
 /// let task = serde_json::from_str::<Task>(r#"{
 ///     "kind": "Task",
 ///     "version": "v0",
@@ -130,7 +132,7 @@ impl From<gevulot::Task> for Task {
 ///
 /// Basic spec with just image and resources:
 /// ```
-/// use crate::models::TaskSpec;
+/// use gevulot_rs::models::TaskSpec;
 ///
 /// let spec = serde_json::from_str::<TaskSpec>(r#"{
 ///     "image": "ubuntu:latest",
@@ -203,10 +205,10 @@ impl From<gevulot::TaskSpec> for TaskSpec {
                 })
                 .collect(),
             resources: TaskResources {
-                cpus: (proto.cpus as i64).into(),
-                gpus: (proto.gpus as i64).into(),
-                memory: (proto.memory as i64).into(),
-                time: (proto.time as i64).into(),
+                cpus: proto.cpus.into(),
+                gpus: proto.gpus.into(),
+                memory: proto.memory.into(),
+                time: proto.time.into(),
             },
             store_stdout: proto.store_stdout,
             store_stderr: proto.store_stderr,
@@ -407,7 +409,8 @@ mod tests {
 
         assert_eq!(task.spec.resources.cpus.millicores(), Ok(1000));
         assert_eq!(task.spec.resources.gpus.millicores(), Ok(1000));
-        assert_eq!(task.spec.resources.memory.bytes(), Ok(1024));
+        // task resources are specified with ByteUnit<DefaultFactorOneMegabyte>::Number(1024)
+        assert_eq!(task.spec.resources.memory.bytes(), Ok(1024 * 1024 * 1024));
         assert_eq!(task.spec.resources.time.seconds(), Ok(1));
     }
 
