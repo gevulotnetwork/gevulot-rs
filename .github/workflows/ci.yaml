@@ -38,9 +38,8 @@ jobs:
       - name: Check build
         run: cargo check --locked
 
-      # TODO: re-enable this after fixing all clippy warnings
-      # - name: Run linting
-      #   run: cargo clippy --locked --no-deps -- --deny warnings
+      - name: Run linting
+        run: cargo clippy --locked --no-deps -- --deny warnings
 
       - name: Run runtime-config tests
         run: cargo test --locked runtime_config
