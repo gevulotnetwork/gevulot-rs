@@ -165,7 +165,7 @@ impl CoreUnit {
             CoreUnit::Number(n) => Ok(*n * 1000), // Default factor without unit is 1000
             CoreUnit::String(s) => {
                 // Extract numeric part
-                let numeric: String = s.chars().take_while(|c| c.is_digit(10)).collect();
+                let numeric: String = s.chars().take_while(|c| c.is_ascii_digit()).collect();
                 // Extract and normalize unit part
                 let unit = s[numeric.len()..].to_lowercase().replace(" ", "");
                 let base: u64 = numeric

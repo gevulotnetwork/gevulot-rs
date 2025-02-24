@@ -47,6 +47,9 @@ pub mod proto {
         tonic::include_proto!("cosmos_proto");
     }
 
+    // Some of generated documentation is not properly formatted
+    // and we don't want clippy to report this.
+    #[allow(clippy::doc_lazy_continuation)]
     pub mod google {
         tonic::include_proto!("google.api");
     }
