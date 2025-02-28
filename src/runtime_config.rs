@@ -19,7 +19,7 @@
 //! - Set environment variables specified in [`env`](RuntimeConfig::env);
 //! - Set working directory to [`working_dir`](RuntimeConfig::working_dir);
 //! - Load kernel modules in order of specification in
-//! [`kernel_modules`](RuntimeConfig::kernel_modules);
+//!   [`kernel_modules`](RuntimeConfig::kernel_modules);
 //! - Run boot commands in order of specification in [`bootcmd`](RuntimeConfig::bootcmd).
 //!
 //! If current configuration defines a `command` to run, it should be updated together with its
