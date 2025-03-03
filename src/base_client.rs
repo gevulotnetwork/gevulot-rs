@@ -91,7 +91,7 @@ impl BaseClient {
             gov_client: GovQueryClient::new(channel.clone()),
             tendermint_client: TendermintClient::new(channel.clone()),
             tx_client: TxServiceClient::new(channel),
-            denom: "ucredit".to_owned(),
+            denom: env!("GEVULOT_TOKEN_DENOM").to_string(),
             gas_price,
             gas_multiplier,
             address: None,
@@ -164,7 +164,7 @@ impl BaseClient {
     pub async fn get_account_balance(&mut self, address: &str) -> Result<Coin> {
         let request = cosmrs::proto::cosmos::bank::v1beta1::QueryBalanceRequest {
             address: address.to_string(),
-            denom: String::from("ucredit"),
+            denom: env!("GEVULOT_TOKEN_DENOM").to_string(),
         };
         let response = self.bank_client.balance(request).await?;
 
@@ -251,7 +251,7 @@ impl BaseClient {
     ) -> Result<SimulateResponse> {
         let msg = cosmrs::Any::from_msg(&msg)?;
         let gas = 100_000u64;
-        let chain_id: cosmrs::tendermint::chain::Id = "gevulot"
+        let chain_id: cosmrs::tendermint::chain::Id = env!("GEVULOT_CHAIN_ID")
             .parse()
             .map_err(|_| Error::Parse("fail".to_string()))?;
         let tx_body = cosmrs::tx::BodyBuilder::new().msg(msg).memo(memo).finish();
@@ -313,7 +313,7 @@ impl BaseClient {
         log::debug!("fee: {:?}", fee);
 
         let msg = cosmrs::Any::from_msg(&msg)?;
-        let chain_id: cosmrs::tendermint::chain::Id = "gevulot"
+        let chain_id: cosmrs::tendermint::chain::Id = env!("GEVULOT_CHAIN_ID")
             .parse()
             .map_err(|_| Error::Parse("fail".to_string()))?;
         let tx_body = cosmrs::tx::BodyBuilder::new().msg(msg).memo(memo).finish();

@@ -2,6 +2,9 @@ use prost_build::Config;
 use std::io::Read;
 use std::{env::set_current_dir, path::PathBuf};
 
+const DEFAULT_CHAIN_ID: &str = "gevulot";
+const DEFAULT_TOKEN_DENOM: &str = "ucredit";
+
 fn main() {
     let out_dir = PathBuf::from(std::env::var_os("OUT_DIR").unwrap());
     let mut config = Config::new();
@@ -50,4 +53,12 @@ fn main() {
         )
         .unwrap();
     }
+
+    let chain_id = std::env::var("GEVULOT_CHAIN_ID").unwrap_or(DEFAULT_CHAIN_ID.to_string());
+    println!("cargo:rustc-env=GEVULOT_CHAIN_ID={}", chain_id);
+    println!("cargo:rerun-if-env-changed=GEVULOT_CHAIN_ID");
+
+    let denom = std::env::var("GEVULOT_TOKEN_DENOM").unwrap_or(DEFAULT_TOKEN_DENOM.to_string());
+    println!("cargo:rustc-env=GEVULOT_TOKEN_DENOM={}", denom);
+    println!("cargo:rerun-if-env-changed=GEVULOT_TOKEN_DENOM");
 }
