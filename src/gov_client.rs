@@ -224,7 +224,7 @@ impl GovClient {
         };
 
         let deposit = vec![Coin {
-            denom: "ucredit".to_string(),
+            denom: self.base_client.read().await.denom.to_string(),
             amount: deposit.to_string(),
         }];
         let msg = MsgSubmitProposal {
