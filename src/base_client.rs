@@ -17,6 +17,12 @@ type TxServiceClient<T> = cosmrs::proto::cosmos::tx::v1beta1::service_client::Se
 type TendermintClient<T> =
     cosmrs::proto::cosmos::base::tendermint::v1beta1::service_client::ServiceClient<T>;
 
+/// Default chain ID.
+pub const DEFAULT_CHAIN_ID: &str = "gevulot";
+
+/// Default token denomination.
+pub const DEFAULT_TOKEN_DENOM: &str = "ucredit";
+
 /// BaseClient is a struct that provides various functionalities to interact with the blockchain.
 #[derive(derivative::Derivative)]
 #[derivative(Debug)]
@@ -31,7 +37,8 @@ pub struct BaseClient {
     pub tx_client: TxServiceClient<Channel>,
 
     gas_price: f64,
-    denom: String,
+    pub denom: String,
+    pub chain_id: String,
     gas_multiplier: f64,
 
     // Data from signer
@@ -91,7 +98,8 @@ impl BaseClient {
             gov_client: GovQueryClient::new(channel.clone()),
             tendermint_client: TendermintClient::new(channel.clone()),
             tx_client: TxServiceClient::new(channel),
-            denom: "ucredit".to_owned(),
+            denom: DEFAULT_TOKEN_DENOM.to_string(),
+            chain_id: DEFAULT_CHAIN_ID.to_string(),
             gas_price,
             gas_multiplier,
             address: None,
@@ -164,7 +172,7 @@ impl BaseClient {
     pub async fn get_account_balance(&mut self, address: &str) -> Result<Coin> {
         let request = cosmrs::proto::cosmos::bank::v1beta1::QueryBalanceRequest {
             address: address.to_string(),
-            denom: String::from("ucredit"),
+            denom: self.denom.clone(),
         };
         let response = self.bank_client.balance(request).await?;
 
@@ -251,7 +259,8 @@ impl BaseClient {
     ) -> Result<SimulateResponse> {
         let msg = cosmrs::Any::from_msg(&msg)?;
         let gas = 100_000u64;
-        let chain_id: cosmrs::tendermint::chain::Id = "gevulot"
+        let chain_id: cosmrs::tendermint::chain::Id = self
+            .chain_id
             .parse()
             .map_err(|_| Error::Parse("fail".to_string()))?;
         let tx_body = cosmrs::tx::BodyBuilder::new().msg(msg).memo(memo).finish();
@@ -313,7 +322,8 @@ impl BaseClient {
         log::debug!("fee: {:?}", fee);
 
         let msg = cosmrs::Any::from_msg(&msg)?;
-        let chain_id: cosmrs::tendermint::chain::Id = "gevulot"
+        let chain_id: cosmrs::tendermint::chain::Id = self
+            .chain_id
             .parse()
             .map_err(|_| Error::Parse("fail".to_string()))?;
         let tx_body = cosmrs::tx::BodyBuilder::new().msg(msg).memo(memo).finish();
