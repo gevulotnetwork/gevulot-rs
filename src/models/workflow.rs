@@ -19,14 +19,21 @@ use serde::{Deserialize, Serialize};
 ///
 /// Creating a basic workflow:
 /// ```
-/// use crate::models::Workflow;
+/// use gevulot_rs::models::Workflow;
 ///
 /// let workflow = serde_json::from_str::<Workflow>(r#"{
 ///     "kind": "Workflow",
 ///     "version": "v0",
 ///     "metadata": {
 ///         "name": "my-workflow",
-///         "tags": ["compute"]
+///         "tags": ["compute"],
+///         "description": "Worker #1",
+///         "labels": [
+///             {
+///                 "key": "my-key",
+///                 "value": "my-label"
+///             }
+///         ]
 ///     },
 ///     "spec": {
 ///         "stages": [{
@@ -34,7 +41,9 @@ use serde::{Deserialize, Serialize};
 ///                 "image": "alpine",
 ///                 "resources": {
 ///                     "cpus": "1cpu",
-///                     "memory": "1GiB"
+///                     "memory": "1GiB",
+///                     "gpus": 0,
+///                     "time": "120s"
 ///                 }
 ///             }]
 ///         }]

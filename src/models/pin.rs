@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Creating a Pin with CID:
 /// ```
-/// use crate::models::{Pin, PinSpec, Metadata};
+/// use gevulot_rs::models::{Pin, PinSpec, Metadata};
 ///
 /// let pin = Pin {
 ///     kind: "Pin".to_string(),
@@ -42,7 +42,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Creating a Pin with fallback URLs:
 /// ```
-/// use crate::models::{Pin, PinSpec, Metadata};
+/// use gevulot_rs::models::{Pin, PinSpec, Metadata};
 ///
 /// let pin = Pin {
 ///     kind: "Pin".to_string(),
@@ -130,7 +130,7 @@ impl From<gevulot::Pin> for Pin {
 /// # Examples
 ///
 /// ```
-/// use crate::models::PinSpec;
+/// use gevulot_rs::models::PinSpec;
 ///
 /// let spec = PinSpec {
 ///     cid: Some("QmExample123".to_string()),
@@ -220,7 +220,7 @@ impl From<gevulot::PinSpec> for PinSpec {
 /// # Examples
 ///
 /// ```
-/// use crate::models::{PinStatus, PinAck};
+/// use gevulot_rs::models::{PinStatus, PinAck};
 ///
 /// let status = PinStatus {
 ///     assigned_workers: vec!["worker1".to_string(), "worker2".to_string()],
@@ -274,7 +274,7 @@ impl From<gevulot::PinStatus> for PinStatus {
 /// # Examples
 ///
 /// ```
-/// use crate::models::PinAck;
+/// use gevulot_rs::models::PinAck;
 ///
 /// let ack = PinAck {
 ///     worker: "worker1".to_string(),
