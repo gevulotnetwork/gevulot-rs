@@ -135,6 +135,23 @@ impl BaseClient {
         Ok(())
     }
 
+    /// Sets a hex-encoded private key for the client and initializes the signer.
+    ///
+    /// # Arguments
+    ///
+    /// * `hex_key` - The hex-encoded private key string (with optional 0x prefix)
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or failure.
+    pub fn set_private_key(&mut self, hex_key: &str) -> Result<()> {
+        let key_bytes = hex::decode(hex_key.trim_start_matches("0x"))?;
+        let signing_key = cosmrs::crypto::secp256k1::SigningKey::from_slice(&key_bytes)?;
+        let signer = GevulotSigner::from_signing_key(signing_key)?;
+        self.set_signer(signer);
+        Ok(())
+    }
+
     /// Retrieves the account information for a given address.
     ///
     /// # Arguments
