@@ -407,8 +407,7 @@ mod tests {
 
         assert_eq!(task.spec.resources.cpus.millicores(), Ok(1000));
         assert_eq!(task.spec.resources.gpus.millicores(), Ok(1000));
-        // task resources are specified with ByteUnit<DefaultFactorOneMegabyte>::Number(1024)
-        assert_eq!(task.spec.resources.memory.bytes(), Ok(1024 * 1024 * 1024));
+        assert_eq!(task.spec.resources.memory.bytes(), Ok(1024));
         assert_eq!(task.spec.resources.time.seconds(), Ok(1));
     }
 
