@@ -26,6 +26,21 @@ pub struct GevulotClient {
     pub base_client: Arc<RwLock<BaseClient>>,
 }
 
+impl From<BaseClient> for GevulotClient {
+    fn from(base_client: BaseClient) -> Self {
+        let base_client = Arc::new(RwLock::new(base_client));
+        Self {
+            pins: PinClient::new(base_client.clone()),
+            tasks: TaskClient::new(base_client.clone()),
+            workflows: WorkflowClient::new(base_client.clone()),
+            workers: WorkerClient::new(base_client.clone()),
+            gov: GovClient::new(base_client.clone()),
+            sudo: SudoClient::new(base_client.clone()),
+            base_client,
+        }
+    }
+}
+
 /// Builder for GevulotClient
 pub struct GevulotClientBuilder {
     endpoint: String,
