@@ -26,9 +26,26 @@ pub struct GevulotClient {
     pub base_client: Arc<RwLock<BaseClient>>,
 }
 
+impl From<BaseClient> for GevulotClient {
+    fn from(base_client: BaseClient) -> Self {
+        let base_client = Arc::new(RwLock::new(base_client));
+        Self {
+            pins: PinClient::new(base_client.clone()),
+            tasks: TaskClient::new(base_client.clone()),
+            workflows: WorkflowClient::new(base_client.clone()),
+            workers: WorkerClient::new(base_client.clone()),
+            gov: GovClient::new(base_client.clone()),
+            sudo: SudoClient::new(base_client.clone()),
+            base_client,
+        }
+    }
+}
+
 /// Builder for GevulotClient
 pub struct GevulotClientBuilder {
     endpoint: String,
+    chain_id: Option<String>,
+    denom: Option<String>,
     gas_price: f64,
     gas_multiplier: f64,
     mnemonic: Option<String>,
@@ -41,6 +58,8 @@ impl Default for GevulotClientBuilder {
     fn default() -> Self {
         Self {
             endpoint: "http://127.0.0.1:9090".to_string(),
+            chain_id: None,
+            denom: None,
             gas_price: 0.025,
             gas_multiplier: 1.2,
             mnemonic: None,
@@ -59,6 +78,18 @@ impl GevulotClientBuilder {
     /// Sets the endpoint for the GevulotClient
     pub fn endpoint(mut self, endpoint: &str) -> Self {
         self.endpoint = endpoint.to_string();
+        self
+    }
+
+    /// Sets the chain ID for the GevulotClient
+    pub fn chain_id(mut self, chain_id: &str) -> Self {
+        self.chain_id = Some(chain_id.to_string());
+        self
+    }
+
+    /// Sets the token denomination for the GevulotClient
+    pub fn denom(mut self, denom: &str) -> Self {
+        self.denom = Some(denom.to_string());
         self
     }
 
@@ -98,6 +129,16 @@ impl GevulotClientBuilder {
         let base_client = Arc::new(RwLock::new(
             BaseClient::new(&self.endpoint, self.gas_price, self.gas_multiplier).await?,
         ));
+
+        // If chain ID is provided, set it in the BaseClient
+        if let Some(chain_id) = self.chain_id {
+            base_client.write().await.chain_id = chain_id;
+        }
+
+        // If token denomination is provided, set it in the BaseClient
+        if let Some(denom) = self.denom {
+            base_client.write().await.denom = denom;
+        }
 
         // If a mnemonic is provided, set it in the BaseClient
         if let Some(mnemonic) = self.mnemonic {

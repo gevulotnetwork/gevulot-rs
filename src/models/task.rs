@@ -10,15 +10,13 @@
 use crate::proto::gevulot::gevulot;
 use serde::{Deserialize, Serialize};
 
-use super::serialization_helpers::DefaultFactorOneMegabyte;
-
 /// Represents a complete task definition with metadata, specification and status
 ///
 /// # Examples
 ///
 /// Creating a basic task:
 /// ```
-/// use crate::models::Task;
+/// use gevulot_rs::models::Task;
 ///
 /// let task = serde_json::from_str::<Task>(r#"{
 ///     "kind": "Task",
@@ -38,6 +36,8 @@ use super::serialization_helpers::DefaultFactorOneMegabyte;
 ///
 /// Task with input/output contexts:
 /// ```
+/// use gevulot_rs::models::Task;
+///
 /// let task = serde_json::from_str::<Task>(r#"{
 ///     "kind": "Task",
 ///     "version": "v0",
@@ -130,7 +130,7 @@ impl From<gevulot::Task> for Task {
 ///
 /// Basic spec with just image and resources:
 /// ```
-/// use crate::models::TaskSpec;
+/// use gevulot_rs::models::TaskSpec;
 ///
 /// let spec = serde_json::from_str::<TaskSpec>(r#"{
 ///     "image": "ubuntu:latest",
@@ -203,10 +203,10 @@ impl From<gevulot::TaskSpec> for TaskSpec {
                 })
                 .collect(),
             resources: TaskResources {
-                cpus: (proto.cpus as i64).into(),
-                gpus: (proto.gpus as i64).into(),
-                memory: (proto.memory as i64).into(),
-                time: (proto.time as i64).into(),
+                cpus: proto.cpus.into(),
+                gpus: proto.gpus.into(),
+                memory: proto.memory.into(),
+                time: proto.time.into(),
             },
             store_stdout: proto.store_stdout,
             store_stderr: proto.store_stderr,
@@ -248,7 +248,7 @@ pub struct TaskResources {
     // GPU cores required (supports units like "1gpu", "500mgpu")
     pub gpus: crate::models::CoreUnit,
     // Memory required (supports units like "1gb", "512mb")
-    pub memory: crate::models::ByteUnit<DefaultFactorOneMegabyte>, // when no unit is specified, we assume MiB
+    pub memory: crate::models::ByteUnit,
     // Time limit (supports units like "1h", "30m")
     pub time: crate::models::TimeUnit,
 }
@@ -409,6 +409,25 @@ mod tests {
         assert_eq!(task.spec.resources.gpus.millicores(), Ok(1000));
         assert_eq!(task.spec.resources.memory.bytes(), Ok(1024));
         assert_eq!(task.spec.resources.time.seconds(), Ok(1));
+    }
+
+    #[test]
+    fn test_parse_resources_without_units_as_strings() {
+        let resources = serde_json::from_value::<TaskResources>(json!({
+            "cpus": "1",
+            "gpus": "1",
+            "memory": "1024",
+            "time": 1
+        }))
+        .unwrap();
+        // To parse time we use humantime, which does require an explicit suffix,
+        // so specifying time as string doesn't work
+        // However for other resource types string with bare number is equal to that number.
+
+        assert_eq!(resources.cpus.millicores(), Ok(1000));
+        assert_eq!(resources.gpus.millicores(), Ok(1000));
+        assert_eq!(resources.memory.bytes(), Ok(1024));
+        assert_eq!(resources.time.seconds(), Ok(1));
     }
 
     #[test]

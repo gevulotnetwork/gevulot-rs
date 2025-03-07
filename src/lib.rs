@@ -23,7 +23,7 @@ pub mod event_fetcher;
 pub mod events;
 pub mod gov_client;
 /// This module contains the signer implementation.
-mod signer;
+pub mod signer;
 
 /// This module contains the protocol buffer definitions.
 pub mod proto {
@@ -47,6 +47,12 @@ pub mod proto {
         tonic::include_proto!("cosmos_proto");
     }
 
+    // Some of generated documentation is not properly formatted
+    // and we don't want clippy to report this.
+    #[allow(clippy::doc_lazy_continuation)]
+    // Code examples in generated code are not compiling
+    // and we don't want them to crash doc-tests.
+    #[cfg(not(doctest))]
     pub mod google {
         tonic::include_proto!("google.api");
     }
@@ -87,6 +93,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn test_event_fetching() {
         pretty_env_logger::init();
 
@@ -118,6 +125,7 @@ mod tests {
 
     /// End-to-end test for the Gevulot client.
     #[tokio::test]
+    #[ignore]
     async fn test_e2e() {
         let (mnemonic, address) = alice();
 
