@@ -10,8 +10,6 @@
 use crate::proto::gevulot::gevulot;
 use serde::{Deserialize, Serialize};
 
-use super::serialization_helpers::DefaultFactorOneMegabyte;
-
 /// Represents a complete task definition with metadata, specification and status
 ///
 /// # Examples
@@ -248,7 +246,7 @@ pub struct TaskResources {
     // GPU cores required (supports units like "1gpu", "500mgpu")
     pub gpus: crate::models::CoreUnit,
     // Memory required (supports units like "1gb", "512mb")
-    pub memory: crate::models::ByteUnit<DefaultFactorOneMegabyte>, // when no unit is specified, we assume MiB
+    pub memory: crate::models::ByteUnit,
     // Time limit (supports units like "1h", "30m")
     pub time: crate::models::TimeUnit,
 }
@@ -409,6 +407,25 @@ mod tests {
         assert_eq!(task.spec.resources.gpus.millicores(), Ok(1000));
         assert_eq!(task.spec.resources.memory.bytes(), Ok(1024));
         assert_eq!(task.spec.resources.time.seconds(), Ok(1));
+    }
+
+    #[test]
+    fn test_parse_resources_without_units_as_strings() {
+        let resources = serde_json::from_value::<TaskResources>(json!({
+            "cpus": "1",
+            "gpus": "1",
+            "memory": "1024",
+            "time": 1
+        }))
+        .unwrap();
+        // To parse time we use humantime, which does require an explicit suffix,
+        // so specifying time as string doesn't work
+        // However for other resource types string with bare number is equal to that number.
+
+        assert_eq!(resources.cpus.millicores(), Ok(1000));
+        assert_eq!(resources.gpus.millicores(), Ok(1000));
+        assert_eq!(resources.memory.bytes(), Ok(1024));
+        assert_eq!(resources.time.seconds(), Ok(1));
     }
 
     #[test]
