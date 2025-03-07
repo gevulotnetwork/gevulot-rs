@@ -205,8 +205,8 @@ impl From<gevulot::PinSpec> for PinSpec {
     fn from(proto: gevulot::PinSpec) -> Self {
         PinSpec {
             cid: None,
-            bytes: (proto.bytes as i64).into(),
-            time: (proto.time as i64).into(),
+            bytes: proto.bytes.into(),
+            time: proto.time.into(),
             redundancy: proto.redundancy as i64,
             fallback_urls: Some(proto.fallback_urls),
         }
