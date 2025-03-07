@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 /// # Examples
 ///
 /// ```
-/// use crate::models::Metadata;
-/// use crate::models::Label;
+/// use gevulot_rs::models::Metadata;
+/// use gevulot_rs::models::Label;
 ///
 /// let metadata = Metadata {
 ///     id: Some("task-123".to_string()),
@@ -48,7 +48,7 @@ pub struct Metadata {
 /// # Examples
 ///
 /// ```
-/// use crate::models::Label;
+/// use gevulot_rs::models::Label;
 ///
 /// let label = Label {
 ///     key: "environment".to_string(),

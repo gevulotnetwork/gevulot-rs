@@ -434,7 +434,7 @@ impl BaseClient {
     /// Waits for a block to be produced at a specific height.
     ///
     /// # Arguments
-
+    ///
     /// * `height` - The height of the block to wait for.
     ///
     /// # Returns
