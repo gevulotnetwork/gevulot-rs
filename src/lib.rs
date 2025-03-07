@@ -23,7 +23,7 @@ pub mod event_fetcher;
 pub mod events;
 pub mod gov_client;
 /// This module contains the signer implementation.
-mod signer;
+pub mod signer;
 
 /// This module contains the protocol buffer definitions.
 pub mod proto {
