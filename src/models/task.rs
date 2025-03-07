@@ -203,10 +203,10 @@ impl From<gevulot::TaskSpec> for TaskSpec {
                 })
                 .collect(),
             resources: TaskResources {
-                cpus: (proto.cpus as i64).into(),
-                gpus: (proto.gpus as i64).into(),
-                memory: (proto.memory as i64).into(),
-                time: (proto.time as i64).into(),
+                cpus: proto.cpus.into(),
+                gpus: proto.gpus.into(),
+                memory: proto.memory.into(),
+                time: proto.time.into(),
             },
             store_stdout: proto.store_stdout,
             store_stderr: proto.store_stderr,

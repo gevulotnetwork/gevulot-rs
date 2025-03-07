@@ -129,10 +129,10 @@ impl From<gevulot::WorkerSpec> for WorkerSpec {
     fn from(proto: gevulot::WorkerSpec) -> Self {
         // Convert protobuf spec to internal spec
         WorkerSpec {
-            cpus: (proto.cpus as i64).into(),
-            gpus: (proto.gpus as i64).into(),
-            memory: (proto.memory as i64).into(),
-            disk: (proto.disk as i64).into(),
+            cpus: proto.cpus.into(),
+            gpus: proto.gpus.into(),
+            memory: proto.memory.into(),
+            disk: proto.disk.into(),
         }
     }
 }
@@ -160,10 +160,10 @@ impl From<gevulot::WorkerStatus> for WorkerStatus {
     fn from(proto: gevulot::WorkerStatus) -> Self {
         // Convert protobuf status to internal status
         WorkerStatus {
-            cpus_used: (proto.cpus_used as i64).into(),
-            gpus_used: (proto.gpus_used as i64).into(),
-            memory_used: (proto.memory_used as i64).into(),
-            disk_used: (proto.disk_used as i64).into(),
+            cpus_used: proto.cpus_used.into(),
+            gpus_used: proto.gpus_used.into(),
+            memory_used: proto.memory_used.into(),
+            disk_used: proto.disk_used.into(),
             exit_announced_at: proto.exit_announced_at as i64,
         }
     }
