@@ -22,24 +22,45 @@ impl DefaultFactor for DefaultFactorOne {
     const FACTOR: u64 = 1;
 }
 
-/// Default factor of 1KB (1024 bytes)
+/// Default factor of 1KB (1000 bytes)
 #[derive(Debug)]
 pub struct DefaultFactorOneKilobyte;
 impl DefaultFactor for DefaultFactorOneKilobyte {
-    const FACTOR: u64 = 1024;
+    const FACTOR: u64 = 1000;
 }
 
-/// Default factor of 1MB (1024 * 1024 bytes)
+/// Default factor of 1MB (1000 * 1000 bytes)
 #[derive(Debug)]
 pub struct DefaultFactorOneMegabyte;
 impl DefaultFactor for DefaultFactorOneMegabyte {
-    const FACTOR: u64 = 1024 * 1024;
+    const FACTOR: u64 = 1000 * 1000;
 }
 
-/// Default factor of 1GB (1024 * 1024 * 1024 bytes)
+/// Default factor of 1GB (1000 * 1000 * 1000 bytes)
 #[derive(Debug)]
 pub struct DefaultFactorOneGigabyte;
 impl DefaultFactor for DefaultFactorOneGigabyte {
+    const FACTOR: u64 = 1000 * 1000 * 1000;
+}
+
+/// Default factor of 1KiB (1024 bytes)
+#[derive(Debug)]
+pub struct DefaultFactorOneKibibyte;
+impl DefaultFactor for DefaultFactorOneKibibyte {
+    const FACTOR: u64 = 1024;
+}
+
+/// Default factor of 1MiB (1024 * 1024 bytes)
+#[derive(Debug)]
+pub struct DefaultFactorOneMebibyte;
+impl DefaultFactor for DefaultFactorOneMebibyte {
+    const FACTOR: u64 = 1024 * 1024;
+}
+
+/// Default factor of 1GiB (1024 * 1024 * 1024 bytes)
+#[derive(Debug)]
+pub struct DefaultFactorOneGibibyte;
+impl DefaultFactor for DefaultFactorOneGibibyte {
     const FACTOR: u64 = 1024 * 1024 * 1024;
 }
 
@@ -61,7 +82,7 @@ impl DefaultFactor for DefaultFactorOneGigabyte {
 ///
 /// // Use raw number
 /// let bytes = ByteUnit::<DefaultFactorOneMegabyte>::from(1);
-/// assert_eq!(bytes.bytes().unwrap(), 1 * 1024 * 1024);
+/// assert_eq!(bytes.bytes().unwrap(), 1 * 1000 * 1000);
 /// ```
 #[derive(Debug, Serialize, Deserialize, Eq)]
 #[serde(untagged)]
@@ -276,20 +297,38 @@ mod tests {
         let bytes: ByteUnit<DefaultFactorOneKilobyte> = 1.into();
         assert_eq!(
             bytes.bytes(),
-            Ok(1 * 1024),
-            "1 with KB factor should be 1024 bytes"
+            Ok(1 * 1000),
+            "1 with KB factor should be 1000 bytes"
         );
         let bytes: ByteUnit<DefaultFactorOneMegabyte> = 1.into();
         assert_eq!(
             bytes.bytes(),
-            Ok(1 * 1024 * 1024),
-            "1 with MB factor should be 1024*1024 bytes"
+            Ok(1 * 1000 * 1000),
+            "1 with MB factor should be 1000*1000 bytes"
         );
         let bytes: ByteUnit<DefaultFactorOneGigabyte> = 1.into();
         assert_eq!(
             bytes.bytes(),
+            Ok(1 * 1000 * 1000 * 1000),
+            "1 with GB factor should be 1000*1000*1000 bytes"
+        );
+        let bytes: ByteUnit<DefaultFactorOneKibibyte> = 1.into();
+        assert_eq!(
+            bytes.bytes(),
+            Ok(1 * 1024),
+            "1 with KiB factor should be 1024 bytes"
+        );
+        let bytes: ByteUnit<DefaultFactorOneMebibyte> = 1.into();
+        assert_eq!(
+            bytes.bytes(),
+            Ok(1 * 1024 * 1024),
+            "1 with MiB factor should be 1024*1024 bytes"
+        );
+        let bytes: ByteUnit<DefaultFactorOneGibibyte> = 1.into();
+        assert_eq!(
+            bytes.bytes(),
             Ok(1 * 1024 * 1024 * 1024),
-            "1 with GB factor should be 1024*1024*1024 bytes"
+            "1 with GiB factor should be 1024*1024*1024 bytes"
         );
 
         let bytes: ByteUnit = "1".parse().unwrap();
@@ -301,20 +340,38 @@ mod tests {
         let bytes: ByteUnit<DefaultFactorOneKilobyte> = "1".parse().unwrap();
         assert_eq!(
             bytes.bytes(),
-            Ok(1 * 1024),
-            "String '1' with KB factor should be 1024 bytes"
+            Ok(1 * 1000),
+            "String '1' with KB factor should be 1000 bytes"
         );
         let bytes: ByteUnit<DefaultFactorOneMegabyte> = "1".parse().unwrap();
         assert_eq!(
             bytes.bytes(),
-            Ok(1 * 1024 * 1024),
-            "String '1' with MB factor should be 1024*1024 bytes"
+            Ok(1 * 1000 * 1000),
+            "String '1' with MB factor should be 1000*1000 bytes"
         );
         let bytes: ByteUnit<DefaultFactorOneGigabyte> = "1".parse().unwrap();
         assert_eq!(
             bytes.bytes(),
+            Ok(1 * 1000 * 1000 * 1000),
+            "String '1' with GB factor should be 1000*1000*1000 bytes"
+        );
+        let bytes: ByteUnit<DefaultFactorOneKibibyte> = "1".parse().unwrap();
+        assert_eq!(
+            bytes.bytes(),
+            Ok(1 * 1024),
+            "String '1' with KiB factor should be 1024 bytes"
+        );
+        let bytes: ByteUnit<DefaultFactorOneMebibyte> = "1".parse().unwrap();
+        assert_eq!(
+            bytes.bytes(),
+            Ok(1 * 1024 * 1024),
+            "String '1' with MiB factor should be 1024*1024 bytes"
+        );
+        let bytes: ByteUnit<DefaultFactorOneGibibyte> = "1".parse().unwrap();
+        assert_eq!(
+            bytes.bytes(),
             Ok(1 * 1024 * 1024 * 1024),
-            "String '1' with GB factor should be 1024*1024*1024 bytes"
+            "String '1' with GiB factor should be 1024*1024*1024 bytes"
         );
 
         let bytes: ByteUnit<DefaultFactorOneKilobyte> = "1MiB".parse().unwrap();
