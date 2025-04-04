@@ -59,7 +59,10 @@ impl Default for GevulotClientBuilder {
             endpoint: "http://127.0.0.1:9090".to_string(),
             chain_id: None,
             denom: None,
-            gas_config: GasConfig::Dynamic { gas_price: 0.025, gas_multiplier: 1.2 },
+            gas_config: GasConfig::Dynamic {
+                gas_price: 0.025,
+                gas_multiplier: 1.2,
+            },
             mnemonic: None,
             private_key: None,
             password: None,
@@ -95,10 +98,16 @@ impl GevulotClientBuilder {
     pub fn gas_price(mut self, gas_price: f64) -> Self {
         match self.gas_config {
             GasConfig::Dynamic { gas_multiplier, .. } => {
-                self.gas_config = GasConfig::Dynamic { gas_price, gas_multiplier };
+                self.gas_config = GasConfig::Dynamic {
+                    gas_price,
+                    gas_multiplier,
+                };
             }
             GasConfig::Fixed { gas_limit, .. } => {
-                self.gas_config = GasConfig::Fixed { gas_limit, gas_price };
+                self.gas_config = GasConfig::Fixed {
+                    gas_limit,
+                    gas_price,
+                };
             }
         }
         self
@@ -108,10 +117,16 @@ impl GevulotClientBuilder {
     pub fn gas_multiplier(mut self, gas_multiplier: f64) -> Self {
         match self.gas_config {
             GasConfig::Dynamic { gas_price, .. } => {
-                self.gas_config = GasConfig::Dynamic { gas_price, gas_multiplier };
+                self.gas_config = GasConfig::Dynamic {
+                    gas_price,
+                    gas_multiplier,
+                };
             }
             GasConfig::Fixed { gas_price, .. } => {
-                self.gas_config = GasConfig::Dynamic { gas_price, gas_multiplier };
+                self.gas_config = GasConfig::Dynamic {
+                    gas_price,
+                    gas_multiplier,
+                };
             }
         }
         self
@@ -120,10 +135,16 @@ impl GevulotClientBuilder {
     pub fn gas_limit(mut self, gas_limit: u64) -> Self {
         match self.gas_config {
             GasConfig::Dynamic { gas_price, .. } => {
-                self.gas_config = GasConfig::Fixed { gas_price, gas_limit };
+                self.gas_config = GasConfig::Fixed {
+                    gas_price,
+                    gas_limit,
+                };
             }
             GasConfig::Fixed { gas_price, .. } => {
-                self.gas_config = GasConfig::Fixed { gas_price, gas_limit };
+                self.gas_config = GasConfig::Fixed {
+                    gas_price,
+                    gas_limit,
+                };
             }
         }
         self

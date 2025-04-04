@@ -48,20 +48,12 @@ pub struct BaseClient {
 
     // Latest account sequence
     pub account_sequence: Option<u64>,
-
-
 }
 
 #[derive(Debug)]
 pub enum GasConfig {
-    Fixed {
-        gas_price: f64,
-        gas_limit: u64,
-    },
-    Dynamic {
-        gas_price: f64,
-        gas_multiplier: f64,
-    },
+    Fixed { gas_price: f64, gas_limit: u64 },
+    Dynamic { gas_price: f64, gas_multiplier: f64 },
 }
 
 impl BaseClient {
@@ -294,10 +286,10 @@ impl BaseClient {
             .chain_id
             .parse()
             .map_err(|_| Error::Parse("fail".to_string()))?;
-        
+
         let tx_body = cosmrs::tx::BodyBuilder::new().msg(msg).memo(memo).finish();
         let signer_info = cosmrs::tx::SignerInfo::single_direct(self.pub_key, sequence);
-        
+
         let gas_per_ucredit = (1.0 / gas_price).floor() as u128;
         let fee = cosmrs::tx::Fee::from_amount_and_gas(
             Coin {
@@ -306,12 +298,12 @@ impl BaseClient {
             },
             gas_limit,
         );
-        
+
         let auth_info = signer_info.auth_info(fee);
         let sign_doc = cosmrs::tx::SignDoc::new(&tx_body, &auth_info, &chain_id, account_number)?;
         let tx_raw = sign_doc.sign(self.priv_key.as_ref().ok_or("Private key not set")?)?;
         let tx_bytes = tx_raw.to_bytes()?;
-        
+
         Ok((tx_raw, tx_bytes))
     }
 
@@ -337,8 +329,10 @@ impl BaseClient {
     ) -> Result<SimulateResponse> {
         // Use a default gas limit for simulation
         let gas_limit = 100_000u64;
-        let (_, tx_bytes) = self.create_signed_tx(&msg, memo, account_number, sequence, gas_limit, gas_price).await?;
-        
+        let (_, tx_bytes) = self
+            .create_signed_tx(&msg, memo, account_number, sequence, gas_limit, gas_price)
+            .await?;
+
         let mut tx_client = self.tx_client.clone();
 
         #[allow(deprecated)]
@@ -366,8 +360,14 @@ impl BaseClient {
     ) -> Result<String> {
         let (account_number, sequence) = self.get_account_details().await?;
         let (gas_limit, gas_price) = match self.gas_config {
-            GasConfig::Fixed { gas_limit, gas_price } => (gas_limit, gas_price),
-            GasConfig::Dynamic { gas_multiplier, gas_price } => {
+            GasConfig::Fixed {
+                gas_limit,
+                gas_price,
+            } => (gas_limit, gas_price),
+            GasConfig::Dynamic {
+                gas_multiplier,
+                gas_price,
+            } => {
                 // Use simulate_msg to estimate gas
                 log::debug!("Estimating gas limit...");
                 let simulate_response = self
@@ -377,23 +377,25 @@ impl BaseClient {
                 let gas_info = simulate_response.gas_info.ok_or("Failed to get gas info")?;
                 let gas_limit = (gas_info.gas_used * ((gas_multiplier * 10000.0) as u64)) / 10000; // Adjust gas limit based on simulation
                 (gas_limit, gas_price)
-            },
+            }
         };
 
         log::debug!("Using gas limit: {}", gas_limit);
-        
+
         // Create and sign the transaction with the calculated gas limit
-        let (_, tx_bytes) = self.create_signed_tx(&msg, memo, account_number, sequence, gas_limit, gas_price).await?;
+        let (_, tx_bytes) = self
+            .create_signed_tx(&msg, memo, account_number, sequence, gas_limit, gas_price)
+            .await?;
 
         let request = cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastTxRequest {
             tx_bytes,
             mode: 2, // BROADCAST_MODE_SYNC -> Wait for the tx to be processed, but not in-block
         };
-        
+
         let resp = self.tx_client.broadcast_tx(request).await?;
         let resp = resp.into_inner();
         log::debug!("broadcast_tx response: {:#?}", resp);
-        
+
         let tx_response = resp.tx_response.ok_or("Tx response not found")?;
         Self::assert_tx_success(&tx_response)?;
 
