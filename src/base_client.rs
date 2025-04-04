@@ -36,7 +36,7 @@ pub struct BaseClient {
     // Message client
     pub tx_client: TxServiceClient<Channel>,
 
-    gas_config: GasConfig,
+    fuel_policy: FuelPolicy,
     pub denom: String,
     pub chain_id: String,
 
@@ -51,7 +51,7 @@ pub struct BaseClient {
 }
 
 #[derive(Debug)]
-pub enum GasConfig {
+pub enum FuelPolicy {
     Fixed { gas_price: f64, gas_limit: u64 },
     Dynamic { gas_price: f64, gas_multiplier: f64 },
 }
@@ -68,7 +68,7 @@ impl BaseClient {
     /// # Returns
     ///
     /// A Result containing the new instance of BaseClient or an error.
-    pub async fn new(endpoint: &str, gas_config: GasConfig) -> Result<Self> {
+    pub async fn new(endpoint: &str, fuel_policy: FuelPolicy) -> Result<Self> {
         use rand::Rng;
         use tokio::time::{sleep, Duration};
 
@@ -105,7 +105,7 @@ impl BaseClient {
             tx_client: TxServiceClient::new(channel),
             denom: DEFAULT_TOKEN_DENOM.to_string(),
             chain_id: DEFAULT_CHAIN_ID.to_string(),
-            gas_config,
+            fuel_policy,
             address: None,
             pub_key: None,
             priv_key: None,
@@ -359,12 +359,12 @@ impl BaseClient {
         memo: &str,
     ) -> Result<String> {
         let (account_number, sequence) = self.get_account_details().await?;
-        let (gas_limit, gas_price) = match self.gas_config {
-            GasConfig::Fixed {
+        let (gas_limit, gas_price) = match self.fuel_policy {
+            FuelPolicy::Fixed {
                 gas_limit,
                 gas_price,
             } => (gas_limit, gas_price),
-            GasConfig::Dynamic {
+            FuelPolicy::Dynamic {
                 gas_multiplier,
                 gas_price,
             } => {
