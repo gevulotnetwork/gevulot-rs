@@ -36,10 +36,9 @@ pub struct BaseClient {
     // Message client
     pub tx_client: TxServiceClient<Channel>,
 
-    gas_price: f64,
+    fuel_policy: FuelPolicy,
     pub denom: String,
     pub chain_id: String,
-    gas_multiplier: f64,
 
     // Data from signer
     pub address: Option<String>,
@@ -49,6 +48,12 @@ pub struct BaseClient {
 
     // Latest account sequence
     pub account_sequence: Option<u64>,
+}
+
+#[derive(Debug)]
+pub enum FuelPolicy {
+    Fixed { gas_price: f64, gas_limit: u64 },
+    Dynamic { gas_price: f64, gas_multiplier: f64 },
 }
 
 impl BaseClient {
@@ -63,7 +68,7 @@ impl BaseClient {
     /// # Returns
     ///
     /// A Result containing the new instance of BaseClient or an error.
-    pub async fn new(endpoint: &str, gas_price: f64, gas_multiplier: f64) -> Result<Self> {
+    pub async fn new(endpoint: &str, fuel_policy: FuelPolicy) -> Result<Self> {
         use rand::Rng;
         use tokio::time::{sleep, Duration};
 
@@ -100,8 +105,7 @@ impl BaseClient {
             tx_client: TxServiceClient::new(channel),
             denom: DEFAULT_TOKEN_DENOM.to_string(),
             chain_id: DEFAULT_CHAIN_ID.to_string(),
-            gas_price,
-            gas_multiplier,
+            fuel_policy,
             address: None,
             pub_key: None,
             priv_key: None,
@@ -255,6 +259,54 @@ impl BaseClient {
         Ok((account.account_number, sequence))
     }
 
+    /// Creates a signed transaction document with the given parameters.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message to be included in the transaction.
+    /// * `memo` - The memo to be included in the transaction.
+    /// * `account_number` - The account number.
+    /// * `sequence` - The sequence number.
+    /// * `gas_limit` - The gas limit for the transaction.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the raw transaction and its bytes or an error.
+    async fn create_signed_tx<M: Message + Name>(
+        &self,
+        msg: &M,
+        memo: &str,
+        account_number: u64,
+        sequence: u64,
+        gas_limit: u64,
+        gas_price: f64,
+    ) -> Result<(cosmrs::tx::Raw, Vec<u8>)> {
+        let msg = cosmrs::Any::from_msg(msg)?;
+        let chain_id: cosmrs::tendermint::chain::Id = self
+            .chain_id
+            .parse()
+            .map_err(|_| Error::Parse("fail".to_string()))?;
+
+        let tx_body = cosmrs::tx::BodyBuilder::new().msg(msg).memo(memo).finish();
+        let signer_info = cosmrs::tx::SignerInfo::single_direct(self.pub_key, sequence);
+
+        let gas_per_ucredit = (1.0 / gas_price).floor() as u128;
+        let fee = cosmrs::tx::Fee::from_amount_and_gas(
+            Coin {
+                denom: self.denom.parse()?,
+                amount: (gas_limit as u128 / gas_per_ucredit) + 1,
+            },
+            gas_limit,
+        );
+
+        let auth_info = signer_info.auth_info(fee);
+        let sign_doc = cosmrs::tx::SignDoc::new(&tx_body, &auth_info, &chain_id, account_number)?;
+        let tx_raw = sign_doc.sign(self.priv_key.as_ref().ok_or("Private key not set")?)?;
+        let tx_bytes = tx_raw.to_bytes()?;
+
+        Ok((tx_raw, tx_bytes))
+    }
+
     /// Simulates a message to estimate gas usage.
     ///
     /// # Arguments
@@ -273,27 +325,14 @@ impl BaseClient {
         memo: &str,
         account_number: u64,
         sequence: u64,
+        gas_price: f64,
     ) -> Result<SimulateResponse> {
-        let msg = cosmrs::Any::from_msg(&msg)?;
-        let gas = 100_000u64;
-        let chain_id: cosmrs::tendermint::chain::Id = self
-            .chain_id
-            .parse()
-            .map_err(|_| Error::Parse("fail".to_string()))?;
-        let tx_body = cosmrs::tx::BodyBuilder::new().msg(msg).memo(memo).finish();
-        let signer_info = cosmrs::tx::SignerInfo::single_direct(self.pub_key, sequence);
-        let gas_per_ucredit = (1.0 / self.gas_price).floor() as u128;
-        let fee = cosmrs::tx::Fee::from_amount_and_gas(
-            Coin {
-                denom: self.denom.parse()?,
-                amount: (gas as u128) / gas_per_ucredit + 1,
-            },
-            gas,
-        );
-        let auth_info = signer_info.auth_info(fee);
-        let sign_doc = cosmrs::tx::SignDoc::new(&tx_body, &auth_info, &chain_id, account_number)?;
-        let tx_raw = sign_doc.sign(self.priv_key.as_ref().ok_or("Private key not set")?)?;
-        let tx_bytes = tx_raw.to_bytes()?;
+        // Use a default gas limit for simulation
+        let gas_limit = 100_000u64;
+        let (_, tx_bytes) = self
+            .create_signed_tx(&msg, memo, account_number, sequence, gas_limit, gas_price)
+            .await?;
+
         let mut tx_client = self.tx_client.clone();
 
         #[allow(deprecated)]
@@ -319,44 +358,44 @@ impl BaseClient {
         msg: M,
         memo: &str,
     ) -> Result<String> {
-        // Use simulate_msg to estimate gas
         let (account_number, sequence) = self.get_account_details().await?;
-        let simulate_response = self
-            .simulate_msg(msg.clone(), memo, account_number, sequence)
+        let (gas_limit, gas_price) = match self.fuel_policy {
+            FuelPolicy::Fixed {
+                gas_limit,
+                gas_price,
+            } => (gas_limit, gas_price),
+            FuelPolicy::Dynamic {
+                gas_multiplier,
+                gas_price,
+            } => {
+                // Use simulate_msg to estimate gas
+                log::debug!("Estimating gas limit...");
+                let simulate_response = self
+                    .simulate_msg(msg.clone(), memo, account_number, sequence, gas_price)
+                    .await?;
+                log::debug!("simulate_response: {:#?}", simulate_response);
+                let gas_info = simulate_response.gas_info.ok_or("Failed to get gas info")?;
+                let gas_limit = (gas_info.gas_used * ((gas_multiplier * 10000.0) as u64)) / 10000; // Adjust gas limit based on simulation
+                (gas_limit, gas_price)
+            }
+        };
+
+        log::debug!("Using gas limit: {}", gas_limit);
+
+        // Create and sign the transaction with the calculated gas limit
+        let (_, tx_bytes) = self
+            .create_signed_tx(&msg, memo, account_number, sequence, gas_limit, gas_price)
             .await?;
-        log::debug!("simulate_response: {:#?}", simulate_response);
-        let gas_info = simulate_response.gas_info.ok_or("Failed to get gas info")?;
-        let gas_limit = (gas_info.gas_used * ((self.gas_multiplier * 10000.0) as u64)) / 10000; // Adjust gas limit based on simulation
-        let gas_per_ucredit = (1.0 / self.gas_price).floor() as u128;
-        let fee = cosmrs::tx::Fee::from_amount_and_gas(
-            Coin {
-                denom: self.denom.parse()?,
-                amount: (gas_limit as u128 / gas_per_ucredit) + 1,
-            },
-            gas_limit,
-        );
-
-        log::debug!("fee: {:?}", fee);
-
-        let msg = cosmrs::Any::from_msg(&msg)?;
-        let chain_id: cosmrs::tendermint::chain::Id = self
-            .chain_id
-            .parse()
-            .map_err(|_| Error::Parse("fail".to_string()))?;
-        let tx_body = cosmrs::tx::BodyBuilder::new().msg(msg).memo(memo).finish();
-        let signer_info = cosmrs::tx::SignerInfo::single_direct(self.pub_key, sequence);
-        let auth_info = signer_info.auth_info(fee);
-        let sign_doc = cosmrs::tx::SignDoc::new(&tx_body, &auth_info, &chain_id, account_number)?;
-        let tx_raw = sign_doc.sign(self.priv_key.as_ref().ok_or("Private key not set")?)?;
-        let tx_bytes = tx_raw.to_bytes()?;
 
         let request = cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastTxRequest {
             tx_bytes,
             mode: 2, // BROADCAST_MODE_SYNC -> Wait for the tx to be processed, but not in-block
         };
+
         let resp = self.tx_client.broadcast_tx(request).await?;
         let resp = resp.into_inner();
         log::debug!("broadcast_tx response: {:#?}", resp);
+
         let tx_response = resp.tx_response.ok_or("Tx response not found")?;
         Self::assert_tx_success(&tx_response)?;
 
