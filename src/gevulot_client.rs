@@ -1,4 +1,4 @@
-use crate::base_client::BaseClient;
+use crate::base_client::{BaseClient, FuelPolicy};
 use crate::error::Result;
 use crate::gov_client::GovClient;
 use crate::pin_client::PinClient;
@@ -46,8 +46,7 @@ pub struct GevulotClientBuilder {
     endpoint: String,
     chain_id: Option<String>,
     denom: Option<String>,
-    gas_price: f64,
-    gas_multiplier: f64,
+    gas_config: FuelPolicy,
     mnemonic: Option<String>,
     private_key: Option<String>,
     password: Option<String>,
@@ -60,8 +59,10 @@ impl Default for GevulotClientBuilder {
             endpoint: "http://127.0.0.1:9090".to_string(),
             chain_id: None,
             denom: None,
-            gas_price: 0.025,
-            gas_multiplier: 1.2,
+            gas_config: FuelPolicy::Dynamic {
+                gas_price: 0.025,
+                gas_multiplier: 1.2,
+            },
             mnemonic: None,
             private_key: None,
             password: None,
@@ -95,13 +96,57 @@ impl GevulotClientBuilder {
 
     /// Sets the gas price for the GevulotClient
     pub fn gas_price(mut self, gas_price: f64) -> Self {
-        self.gas_price = gas_price;
+        match self.gas_config {
+            FuelPolicy::Dynamic { gas_multiplier, .. } => {
+                self.gas_config = FuelPolicy::Dynamic {
+                    gas_price,
+                    gas_multiplier,
+                };
+            }
+            FuelPolicy::Fixed { gas_limit, .. } => {
+                self.gas_config = FuelPolicy::Fixed {
+                    gas_limit,
+                    gas_price,
+                };
+            }
+        }
         self
     }
 
     /// Sets the gas multiplier for the GevulotClient
     pub fn gas_multiplier(mut self, gas_multiplier: f64) -> Self {
-        self.gas_multiplier = gas_multiplier;
+        match self.gas_config {
+            FuelPolicy::Dynamic { gas_price, .. } => {
+                self.gas_config = FuelPolicy::Dynamic {
+                    gas_price,
+                    gas_multiplier,
+                };
+            }
+            FuelPolicy::Fixed { gas_price, .. } => {
+                self.gas_config = FuelPolicy::Dynamic {
+                    gas_price,
+                    gas_multiplier,
+                };
+            }
+        }
+        self
+    }
+
+    pub fn gas_limit(mut self, gas_limit: u64) -> Self {
+        match self.gas_config {
+            FuelPolicy::Dynamic { gas_price, .. } => {
+                self.gas_config = FuelPolicy::Fixed {
+                    gas_price,
+                    gas_limit,
+                };
+            }
+            FuelPolicy::Fixed { gas_price, .. } => {
+                self.gas_config = FuelPolicy::Fixed {
+                    gas_price,
+                    gas_limit,
+                };
+            }
+        }
         self
     }
 
@@ -127,7 +172,7 @@ impl GevulotClientBuilder {
     pub async fn build(self) -> Result<GevulotClient> {
         // Create a new BaseClient with the provided endpoint, gas price, and gas multiplier
         let base_client = Arc::new(RwLock::new(
-            BaseClient::new(&self.endpoint, self.gas_price, self.gas_multiplier).await?,
+            BaseClient::new(&self.endpoint, self.gas_config).await?,
         ));
 
         // If chain ID is provided, set it in the BaseClient
