@@ -27,6 +27,9 @@ pub mod signer;
 
 /// This module contains the protocol buffer definitions.
 pub mod proto {
+    // We can't do anything with clippy errors inside extrenal generated code,
+    // so just ignore them.
+    #[allow(clippy::all)]
     pub mod cosmos {
         pub mod base {
             pub mod query {
@@ -43,13 +46,12 @@ pub mod proto {
         }
     }
 
+    #[allow(clippy::all)]
     pub mod cosmos_proto {
         tonic::include_proto!("cosmos_proto");
     }
 
-    // Some of generated documentation is not properly formatted
-    // and we don't want clippy to report this.
-    #[allow(clippy::doc_lazy_continuation)]
+    #[allow(clippy::all)]
     // Code examples in generated code are not compiling
     // and we don't want them to crash doc-tests.
     #[cfg(not(doctest))]
