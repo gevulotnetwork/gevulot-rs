@@ -62,8 +62,7 @@ impl BaseClient {
     /// # Arguments
     ///
     /// * `endpoint` - The endpoint URL to connect to.
-    /// * `gas_price` - The gas price to be used.
-    /// * `gas_multiplier` - The gas multiplier to be used.
+    /// * `fuel_policy` - The fuel policy to be used.
     ///
     /// # Returns
     ///
