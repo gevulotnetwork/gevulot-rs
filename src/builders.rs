@@ -234,6 +234,40 @@ impl MsgCreateWorkerBuilder {
 }
 
 #[derive(Builder)]
+pub struct MsgUpdateWorker {
+    pub creator: String,
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub cpus: u64,
+    pub gpus: u64,
+    pub memory: ByteSize,
+    pub disk: ByteSize,
+    pub labels: Vec<Label>,
+    pub tags: Vec<String>,
+}
+
+impl MsgUpdateWorkerBuilder {
+    pub fn into_message(&self) -> Result<gevulot::MsgUpdateWorker> {
+        let msg = self
+            .build()
+            .map_err(|e| Error::EncodeError(e.to_string()))?;
+        Ok(gevulot::MsgUpdateWorker {
+            creator: msg.creator,
+            id: msg.id,
+            name: msg.name,
+            description: msg.description,
+            cpus: msg.cpus,
+            gpus: msg.gpus,
+            memory: msg.memory.to_bytes(),
+            disk: msg.disk.to_bytes(),
+            labels: msg.labels,
+            tags: msg.tags,
+        })
+    }
+}
+
+#[derive(Builder)]
 pub struct MsgDeleteWorker {
     pub creator: String,
     pub id: String,
