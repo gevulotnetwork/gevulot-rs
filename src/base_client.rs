@@ -50,9 +50,12 @@ pub struct BaseClient {
     pub account_sequence: Option<u64>,
 }
 
+/// Fuel policy (gas policy).
 #[derive(Debug)]
 pub enum FuelPolicy {
+    /// Fixed gas limit.
     Fixed { gas_price: f64, gas_limit: u64 },
+    /// Gas limit is calculated through tx simulation.
     Dynamic { gas_price: f64, gas_multiplier: f64 },
 }
 
