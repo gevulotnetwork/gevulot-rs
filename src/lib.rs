@@ -1,4 +1,44 @@
-/// This module contains the base client implementation.
+/*!
+ * # Gevulot Rust API
+ * 
+ * This crate provides the Rust client API for interacting with the Gevulot network,
+ * a decentralized computing platform built on blockchain technology that specializes
+ * in zero-knowledge proofs and secure computation.
+ * 
+ * ## Overview
+ * 
+ * The Gevulot client API enables developers to:
+ * - Register and manage compute workers
+ * - Create and manage data pins for content availability
+ * - Submit computational tasks and workflows
+ * - Query blockchain state and receive events
+ * - Interact with the governance system
+ * 
+ * ## Basic Usage
+ * 
+ * ```rust
+ * use gevulot_rs::{GevulotClientBuilder, builders};
+ * 
+ * async fn example() -> Result<(), Box<dyn std::error::Error>> {
+ *     let mut client = GevulotClientBuilder::new()
+ *         .endpoint("http://localhost:9090")
+ *         .mnemonic("your mnemonic seed phrase")
+ *         .build()
+ *         .await?;
+ *     
+ *     // Now use the client to interact with the Gevulot network
+ *     let worker_list = client.workers.list().await?;
+ *     println!("Workers: {:?}", worker_list);
+ *     
+ *     Ok(())
+ * }
+ * ```
+ */
+
+/// Core client implementation for interacting with the Gevulot network.
+/// 
+/// This module contains the base client that handles communication with the blockchain node,
+/// transaction signing, query execution, and block synchronization.
 pub mod base_client;
 /// This module contains various builders for constructing messages.
 pub mod builders;
