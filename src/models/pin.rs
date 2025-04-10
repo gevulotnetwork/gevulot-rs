@@ -1,8 +1,30 @@
-//! Pin module provides functionality for managing pinned data in the system.
+//! Pin model and related types for managing pinned data in the Gevulot network.
 //!
-//! A Pin represents data that should be stored and maintained by workers in the network.
-//! It includes specifications for storage duration, size, redundancy and can reference
-//! data either by CID or fallback URLs.
+//! This module provides the core data pinning model used throughout the system, including:
+//! - Pin specifications for data storage requirements
+//! - Status tracking of pinned data
+//! - Worker acknowledgment handling
+//! - Content ID (CID) and fallback URL management
+//!
+//! Pins are a critical part of the Gevulot network's data availability system. They
+//! represent data that should be persistently stored by worker nodes for a specified
+//! duration, ensuring data remains accessible for computational tasks.
+//!
+//! # Key Components
+//!
+//! - [`Pin`] - Complete pin definition including metadata, specification, and status
+//! - [`PinSpec`] - Defines data storage requirements (size, time, redundancy)
+//! - [`PinStatus`] - Tracks worker assignments and acknowledgments
+//! - [`PinAck`] - Records individual worker acknowledgments of pinned data
+//!
+//! # Pin Lifecycle
+//!
+//! A typical pin follows this lifecycle:
+//! 1. **Created** - A pin request is submitted with CID or fallback URLs
+//! 2. **Assigned** - Workers are assigned to store the data
+//! 3. **Acknowledged** - Workers confirm they have stored the data
+//! 4. **Maintained** - Data is stored for the specified duration
+//! 5. **Expired** - After the time period elapses, data may be removed
 
 use super::{
     metadata::{Label, Metadata},
@@ -15,6 +37,14 @@ use serde::{Deserialize, Serialize};
 ///
 /// A Pin defines what data should be stored, for how long, and with what redundancy level.
 /// The data can be referenced either by CID or fallback URLs.
+///
+/// # Fields
+///
+/// * `kind` - Type identifier, always "Pin" for pin entities
+/// * `version` - Schema version, typically "v0"
+/// * `metadata` - Pin identification, description, and classification information
+/// * `spec` - Data storage specifications including size, duration, and redundancy
+/// * `status` - Optional current status including worker assignments and acknowledgments
 ///
 /// # Examples
 ///
@@ -66,14 +96,33 @@ use serde::{Deserialize, Serialize};
 /// ```
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Pin {
+    /// Type identifier, always "Pin" for this struct
+    /// Used for type identification in serialized form
     pub kind: String,
+    
+    /// API version for the pin format, currently "v0"
+    /// This allows for future schema evolution
     pub version: String,
+    
+    /// Pin metadata like name, description, tags, and identifying information
+    /// Used for filtering, searching, and referencing pins
     #[serde(default)]
     pub metadata: Metadata,
+    
+    /// Core pin specification containing data storage parameters
+    /// Defines what data to store and the required resources
     pub spec: PinSpec,
+    
+    /// Runtime status of the pin, populated during data storage
+    /// Contains worker assignments and acknowledgment information
     pub status: Option<PinStatus>,
 }
 
+/// Converts a protobuf Pin message to the internal Pin model.
+///
+/// This implementation handles the conversion from the low-level protobuf
+/// representation to the higher-level domain model, ensuring proper
+/// field mapping and type conversions.
 impl From<gevulot::Pin> for Pin {
     fn from(proto: gevulot::Pin) -> Self {
         let mut spec: PinSpec = proto.spec.unwrap().into();
@@ -127,6 +176,20 @@ impl From<gevulot::Pin> for Pin {
 /// Defines the key parameters for pinning data including size, duration and redundancy.
 /// Either a CID or fallback URLs must be specified.
 ///
+/// # Fields
+///
+/// * `cid` - Optional Content Identifier for the data to pin
+/// * `bytes` - Size of the data in bytes with human-readable formatting
+/// * `time` - Duration to keep the data pinned for availability
+/// * `redundancy` - Number of worker nodes that should store copies of the data
+/// * `fallback_urls` - Optional list of URLs where the data can be retrieved from
+///
+/// # Data Identification
+///
+/// A pin must identify data either through:
+/// - A content identifier (CID) - Preferred if data is already in the network
+/// - Fallback URLs - Alternative sources to retrieve the data from
+///
 /// # Examples
 ///
 /// ```
@@ -142,11 +205,25 @@ impl From<gevulot::Pin> for Pin {
 /// ```
 #[derive(Serialize, Debug)]
 pub struct PinSpec {
+    /// Content identifier for the data to pin
+    /// If not present, fallback_urls must be provided
     #[serde(default)]
     pub cid: Option<String>,
+    
+    /// Size of the data in human-readable format (e.g., "1GB")
+    /// Used to estimate storage requirements and costs
     pub bytes: ByteUnit<DefaultFactorOne>,
+    
+    /// Duration to keep the data pinned using human-readable format (e.g., "7d")
+    /// Data may be garbage collected after this period expires
     pub time: TimeUnit,
+    
+    /// Number of worker nodes that should store copies of the data
+    /// Higher values increase data availability and fault tolerance
     pub redundancy: i64,
+    
+    /// Alternative URLs where the data can be retrieved from
+    /// Required if no CID is specified
     #[serde(rename = "fallbackUrls", default)]
     pub fallback_urls: Option<Vec<String>>,
 }
@@ -201,6 +278,11 @@ impl<'de> Deserialize<'de> for PinSpec {
     }
 }
 
+/// Converts a protobuf PinSpec message to the internal PinSpec model.
+///
+/// This implementation handles the conversion from the low-level protobuf
+/// representation to the higher-level domain model, ensuring proper
+/// field mapping and type conversions.
 impl From<gevulot::PinSpec> for PinSpec {
     fn from(proto: gevulot::PinSpec) -> Self {
         PinSpec {
@@ -216,6 +298,13 @@ impl From<gevulot::PinSpec> for PinSpec {
 /// Status information for a Pin
 ///
 /// Tracks which workers are assigned to store the data and their acknowledgments.
+/// This provides visibility into the current state of data availability.
+///
+/// # Fields
+///
+/// * `assigned_workers` - List of worker IDs assigned to store the data
+/// * `worker_acks` - List of acknowledgments from workers confirming storage
+/// * `cid` - Content identifier for the pinned data (may be updated after pinning)
 ///
 /// # Examples
 ///
@@ -237,13 +326,26 @@ impl From<gevulot::PinSpec> for PinSpec {
 /// ```
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PinStatus {
+    /// List of worker IDs assigned to store this data
+    /// The number of workers should typically match the redundancy level
     #[serde(rename = "assignedWorkers", default)]
     pub assigned_workers: Vec<String>,
+    
+    /// List of acknowledgments from workers confirming data storage
+    /// Each acknowledgment includes the block height when storage was confirmed
     #[serde(rename = "workerAcks", default)]
     pub worker_acks: Vec<PinAck>,
+    
+    /// Content identifier for the pinned data
+    /// May be updated after pinning if data was retrieved from fallback URLs
     pub cid: Option<String>,
 }
 
+/// Converts a protobuf PinStatus message to the internal PinStatus model.
+///
+/// This implementation handles the conversion from the low-level protobuf
+/// representation to the higher-level domain model, ensuring proper
+/// field mapping and type conversions.
 impl From<gevulot::PinStatus> for PinStatus {
     fn from(proto: gevulot::PinStatus) -> Self {
         PinStatus {
@@ -251,14 +353,14 @@ impl From<gevulot::PinStatus> for PinStatus {
             worker_acks: proto
                 .worker_acks
                 .into_iter()
-                .map(|a| PinAck {
-                    worker: a.worker,
-                    block_height: a.block_height as i64,
-                    success: a.success,
-                    error: if a.error.is_empty() {
+                .map(|ack| PinAck {
+                    worker: ack.worker,
+                    block_height: ack.block_height as i64,
+                    success: ack.success,
+                    error: if ack.error.is_empty() {
                         None
                     } else {
-                        Some(a.error)
+                        Some(ack.error)
                     },
                 })
                 .collect(),
@@ -267,9 +369,17 @@ impl From<gevulot::PinStatus> for PinStatus {
     }
 }
 
-/// Acknowledgment from a worker about pinning data
+/// Acknowledgment from a worker that it has processed a pin request
 ///
-/// Contains information about whether the pinning was successful and any errors encountered.
+/// This records whether a worker has successfully stored the pinned data,
+/// along with block height for verification and any error information.
+///
+/// # Fields
+///
+/// * `worker` - ID of the worker that provided this acknowledgment
+/// * `block_height` - Blockchain height when acknowledgment was recorded
+/// * `success` - Whether the worker successfully stored the data
+/// * `error` - Optional error message if storage failed
 ///
 /// # Examples
 ///
@@ -282,13 +392,30 @@ impl From<gevulot::PinStatus> for PinStatus {
 ///     success: true,
 ///     error: None,
 /// };
+///
+/// let error_ack = PinAck {
+///     worker: "worker2".to_string(),
+///     block_height: 1001,
+///     success: false,
+///     error: Some("Failed to retrieve data from fallback URLs".to_string()),
+/// };
 /// ```
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PinAck {
+    /// ID of the worker that provided this acknowledgment
     pub worker: String,
+    
+    /// Blockchain height when acknowledgment was recorded
+    /// Useful for verification and auditing purposes
     #[serde(rename = "blockHeight")]
     pub block_height: i64,
+    
+    /// Whether the worker successfully stored the data
+    /// False indicates the worker encountered an error
     pub success: bool,
+    
+    /// Optional error message if the worker failed to store the data
+    /// Provides context about why storage failed
     pub error: Option<String>,
 }
 

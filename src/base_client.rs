@@ -8,68 +8,190 @@ use tonic::transport::{Channel, ClientTlsConfig};
 use crate::error::{Error, Result};
 use crate::signer::GevulotSigner;
 
-// Type aliases for various clients used in the BaseClient
+/// Client type for querying Cosmos Auth module endpoints.
+/// 
+/// This client is used to query account information from the blockchain.
 type AuthQueryClient<T> = cosmrs::proto::cosmos::auth::v1beta1::query_client::QueryClient<T>;
+
+/// Client type for querying Cosmos Bank module endpoints.
+/// 
+/// This client is used to query token balances and supply information.
 type BankQueryClient<T> = cosmrs::proto::cosmos::bank::v1beta1::query_client::QueryClient<T>;
+
+/// Client type for querying Cosmos Governance module endpoints.
+/// 
+/// This client is used to query proposal information and voting status.
 type GovQueryClient<T> = cosmrs::proto::cosmos::gov::v1beta1::query_client::QueryClient<T>;
+
+/// Client type for querying Gevulot-specific module endpoints.
+/// 
+/// This client is used to query Gevulot-specific entities like workers, pins, and tasks.
 type GevulotQueryClient<T> = crate::proto::gevulot::gevulot::query_client::QueryClient<T>;
+
+/// Client type for interacting with the transaction service.
+/// 
+/// This client is used to simulate, broadcast, and query transactions.
 type TxServiceClient<T> = cosmrs::proto::cosmos::tx::v1beta1::service_client::ServiceClient<T>;
+
+/// Client type for querying Tendermint RPC endpoints.
+/// 
+/// This client is used to query blockchain information like blocks and consensus state.
 type TendermintClient<T> =
     cosmrs::proto::cosmos::base::tendermint::v1beta1::service_client::ServiceClient<T>;
 
-/// Default chain ID.
+/// Default chain ID for the Gevulot network.
+/// 
+/// This value is used when creating a new client unless overridden.
 pub const DEFAULT_CHAIN_ID: &str = "gevulot";
 
-/// Default token denomination.
+/// Default token denomination for the Gevulot network.
+/// 
+/// This is the smallest unit of the native token, used for gas fees and transactions.
 pub const DEFAULT_TOKEN_DENOM: &str = "ucredit";
 
-/// BaseClient is a struct that provides various functionalities to interact with the blockchain.
+/// Core client implementation for interacting with the Gevulot blockchain.
+/// 
+/// The `BaseClient` provides a foundation for all interactions with the Gevulot network,
+/// including:
+/// 
+/// - Account and balance queries
+/// - Transaction construction and signing
+/// - Transaction broadcasting and simulation
+/// - Block queries and monitoring
+/// 
+/// It manages connection to the blockchain node, transaction signing, and sequence tracking
+/// for the configured account.
+/// 
+/// # Examples
+/// 
+/// ```
+/// use gevulot_rs::base_client::{BaseClient, FuelPolicy};
+/// 
+/// async fn example() -> Result<(), Box<dyn std::error::Error>> {
+///     // Create a client with dynamic gas estimation
+///     let mut client = BaseClient::new(
+///         "http://localhost:9090",
+///         FuelPolicy::Dynamic {
+///             gas_price: 0.025,
+///             gas_multiplier: 1.2
+///         }
+///     ).await?;
+///     
+///     // Configure the client with a mnemonic seed phrase
+///     client.set_mnemonic("your mnemonic seed phrase", None)?;
+///     
+///     // Get the address
+///     let address = client.address.clone();
+///     
+///     // Query account balance if address is available
+///     if let Some(addr) = address {
+///         let balance = client.get_account_balance(&addr).await?;
+///         println!("Balance: {}", balance);
+///     }
+///     
+///     Ok(())
+/// }
+/// ```
 #[derive(derivative::Derivative)]
 #[derivative(Debug)]
 pub struct BaseClient {
-    // Query clients
+    /// Client for querying the Auth module (account information)
     pub auth_client: AuthQueryClient<Channel>,
+    
+    /// Client for querying the Bank module (token balances and transfers)
     pub bank_client: BankQueryClient<Channel>,
+    
+    /// Client for querying the Gevulot module (workers, pins, tasks)
     pub gevulot_client: GevulotQueryClient<Channel>,
+    
+    /// Client for querying the Gov module (governance proposals)
     pub gov_client: GovQueryClient<Channel>,
+    
+    /// Client for querying Tendermint RPC endpoints (blocks, validators)
     pub tendermint_client: TendermintClient<Channel>,
-    // Message client
+    
+    /// Client for transaction services (simulate, broadcast, query)
     pub tx_client: TxServiceClient<Channel>,
 
+    /// Gas policy configuration for transaction fee estimation
     fuel_policy: FuelPolicy,
+    
+    /// Token denomination used for transactions and queries
     pub denom: String,
+    
+    /// Chain ID used for transaction signing
     pub chain_id: String,
 
-    // Data from signer
+    /// Blockchain address of the configured account
     pub address: Option<String>,
+    
+    /// Public key of the configured account
     pub pub_key: Option<cosmrs::crypto::PublicKey>,
+    
+    /// Private key of the configured account (not included in Debug output)
     #[derivative(Debug = "ignore")]
     priv_key: Option<cosmrs::crypto::secp256k1::SigningKey>,
 
-    // Latest account sequence
+    /// Account sequence number used for transaction ordering
     pub account_sequence: Option<u64>,
 }
 
-/// Fuel policy (gas policy).
+/// Gas policy configuration for transaction fee estimation.
+/// 
+/// This enum defines how transaction gas limits are determined:
+/// - `Fixed`: Uses a predefined gas limit for all transactions
+/// - `Dynamic`: Estimates gas through transaction simulation and applies a multiplier
 #[derive(Debug)]
 pub enum FuelPolicy {
-    /// Fixed gas limit.
+    /// Fixed gas limit for all transactions.
+    /// 
+    /// # Parameters
+    /// 
+    /// * `gas_price` - The price of gas in the native token denomination.
+    /// * `gas_limit` - The fixed gas limit to use for all transactions.
     Fixed { gas_price: f64, gas_limit: u64 },
-    /// Gas limit is calculated through tx simulation.
+    
+    /// Dynamic gas estimation based on transaction simulation.
+    /// 
+    /// # Parameters
+    /// 
+    /// * `gas_price` - The price of gas in the native token denomination.
+    /// * `gas_multiplier` - A multiplier applied to the simulated gas (e.g., 1.2 adds 20% margin).
     Dynamic { gas_price: f64, gas_multiplier: f64 },
 }
 
 impl BaseClient {
-    /// Creates a new instance of BaseClient.
+    /// Creates a new instance of BaseClient with connection to the specified endpoint.
     ///
-    /// # Arguments
+    /// This method establishes a connection to the Gevulot blockchain node at the
+    /// provided endpoint, configuring all necessary client components for interaction
+    /// with the network. It uses exponential backoff with jitter for connection retries.
     ///
-    /// * `endpoint` - The endpoint URL to connect to.
-    /// * `fuel_policy` - The fuel policy to be used.
+    /// # Parameters
+    ///
+    /// * `endpoint` - The gRPC endpoint URL of the Gevulot node (e.g., "http://localhost:9090").
+    /// * `fuel_policy` - The gas policy configuration for transaction fee estimation.
     ///
     /// # Returns
     ///
-    /// A Result containing the new instance of BaseClient or an error.
+    /// A `Result` containing the new instance of `BaseClient` on success,
+    /// or an `Error` if the connection fails after retries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use gevulot_rs::base_client::{BaseClient, FuelPolicy};
+    ///
+    /// async fn create_client() -> Result<BaseClient, gevulot_rs::error::Error> {
+    ///     BaseClient::new(
+    ///         "http://localhost:9090",
+    ///         FuelPolicy::Dynamic {
+    ///             gas_price: 0.025,
+    ///             gas_multiplier: 1.2
+    ///         }
+    ///     ).await
+    /// }
+    /// ```
     pub async fn new(endpoint: &str, fuel_policy: FuelPolicy) -> Result<Self> {
         use rand::Rng;
         use tokio::time::{sleep, Duration};
@@ -115,41 +237,83 @@ impl BaseClient {
         })
     }
 
-    /// Sets the signer for the client.
+    /// Configures the client with a pre-initialized signer.
     ///
-    /// # Arguments
+    /// This method sets up the client with a signer that provides the address,
+    /// public key, and private key needed for transaction signing.
     ///
-    /// * `signer` - The GevulotSigner to be set.
+    /// # Parameters
+    ///
+    /// * `signer` - A pre-initialized `GevulotSigner` instance.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use gevulot_rs::{base_client::BaseClient, signer::GevulotSigner};
+    ///
+    /// fn configure_client(mut client: BaseClient) -> BaseClient {
+    ///     let signer = GevulotSigner::from_mnemonic("your mnemonic", None).unwrap();
+    ///     client.set_signer(signer);
+    ///     client
+    /// }
+    /// ```
     pub fn set_signer(&mut self, signer: GevulotSigner) {
         self.address = Some(signer.0.public_address.to_string());
         self.pub_key = Some(signer.0.public_key);
         self.priv_key = Some(signer.0.private_key);
     }
 
-    /// Sets the mnemonic for the client and initializes the signer.
+    /// Configures the client with a mnemonic seed phrase.
     ///
-    /// # Arguments
+    /// This method derives a private key from the provided mnemonic seed phrase
+    /// and configures the client with the resulting signer.
     ///
-    /// * `mnemonic` - The mnemonic string to be used.
+    /// # Parameters
+    ///
+    /// * `mnemonic` - The BIP-39 mnemonic seed phrase (typically 12 or 24 words).
+    /// * `password` - Optional password for additional security (BIP-39 passphrase).
     ///
     /// # Returns
     ///
-    /// A Result indicating success or failure.
+    /// A `Result` indicating success or failure of the key derivation process.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use gevulot_rs::base_client::BaseClient;
+    ///
+    /// fn configure_client_with_mnemonic(mut client: BaseClient) -> Result<(), gevulot_rs::error::Error> {
+    ///     client.set_mnemonic("word1 word2 ... word12", None)
+    /// }
+    /// ```
     pub fn set_mnemonic(&mut self, mnemonic: &str, password: Option<&str>) -> Result<()> {
         let signer = GevulotSigner::from_mnemonic(mnemonic, password)?;
         self.set_signer(signer);
         Ok(())
     }
 
-    /// Sets a hex-encoded private key for the client and initializes the signer.
+    /// Configures the client with a hex-encoded private key.
     ///
-    /// # Arguments
+    /// This method sets up the client with a signer derived from the provided 
+    /// hex-encoded private key.
     ///
-    /// * `hex_key` - The hex-encoded private key string (with optional 0x prefix)
+    /// # Parameters
+    ///
+    /// * `hex_key` - The hex-encoded private key string (with optional 0x prefix).
     ///
     /// # Returns
     ///
-    /// A Result indicating success or failure.
+    /// A `Result` indicating success or failure of the key parsing process.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use gevulot_rs::base_client::BaseClient;
+    ///
+    /// fn configure_client_with_private_key(mut client: BaseClient) -> Result<(), gevulot_rs::error::Error> {
+    ///     client.set_private_key("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef")
+    /// }
+    /// ```
     pub fn set_private_key(&mut self, hex_key: &str) -> Result<()> {
         let key_bytes = hex::decode(hex_key.trim_start_matches("0x"))?;
         let signing_key = cosmrs::crypto::secp256k1::SigningKey::from_slice(&key_bytes)?;
@@ -158,15 +322,36 @@ impl BaseClient {
         Ok(())
     }
 
-    /// Retrieves the account information for a given address.
+    /// Retrieves account information for a given address.
     ///
-    /// # Arguments
+    /// This method queries the blockchain for the account associated with the specified
+    /// address, returning detailed account information including sequence number
+    /// and account number.
     ///
-    /// * `address` - The address of the account to be retrieved.
+    /// # Parameters
+    ///
+    /// * `address` - The blockchain address to query, in bech32 format.
     ///
     /// # Returns
     ///
-    /// A Result containing the BaseAccount or an error.
+    /// A `Result` containing the `BaseAccount` information on success,
+    /// or an `Error` if the account cannot be retrieved.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use gevulot_rs::base_client::BaseClient;
+    ///
+    /// async fn get_account_info(
+    ///     mut client: BaseClient,
+    ///     address: &str
+    /// ) -> Result<(), gevulot_rs::error::Error> {
+    ///     let account = client.get_account(address).await?;
+    ///     println!("Account number: {}", account.account_number);
+    ///     println!("Sequence: {}", account.sequence);
+    ///     Ok(())
+    /// }
+    /// ```
     pub async fn get_account(&mut self, address: &str) -> Result<BaseAccount> {
         let request = cosmrs::proto::cosmos::auth::v1beta1::QueryAccountRequest {
             address: address.to_owned(),
@@ -183,15 +368,34 @@ impl BaseClient {
         }
     }
 
-    /// Retrieves the account balance for a given address.
+    /// Retrieves the token balance for a given address.
     ///
-    /// # Arguments
+    /// This method queries the blockchain for the balance of the specified address
+    /// in the configured token denomination.
     ///
-    /// * `address` - The address of the account, which balance to get.
+    /// # Parameters
+    ///
+    /// * `address` - The blockchain address to query, in bech32 format.
     ///
     /// # Returns
     ///
-    /// A Result containing the balance or an error.
+    /// A `Result` containing the `Coin` representing the balance on success,
+    /// or an `Error` if the balance cannot be retrieved.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use gevulot_rs::base_client::BaseClient;
+    ///
+    /// async fn get_balance(
+    ///     mut client: BaseClient,
+    ///     address: &str
+    /// ) -> Result<(), gevulot_rs::error::Error> {
+    ///     let balance = client.get_account_balance(address).await?;
+    ///     println!("Balance: {} {}", balance.amount, balance.denom);
+    ///     Ok(())
+    /// }
+    /// ```
     pub async fn get_account_balance(&mut self, address: &str) -> Result<Coin> {
         let request = cosmrs::proto::cosmos::bank::v1beta1::QueryBalanceRequest {
             address: address.to_string(),

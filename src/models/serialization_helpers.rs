@@ -6,6 +6,7 @@
 //! - Time durations (e.g. "24h", "7d")
 
 use std::str::FromStr;
+use std::fmt;
 
 use bytesize::ByteSize;
 use serde::{Deserialize, Serialize};
@@ -16,49 +17,49 @@ pub trait DefaultFactor {
 }
 
 /// Default factor of 1 (no multiplication)
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DefaultFactorOne;
 impl DefaultFactor for DefaultFactorOne {
     const FACTOR: u64 = 1;
 }
 
 /// Default factor of 1KB (1000 bytes)
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DefaultFactorOneKilobyte;
 impl DefaultFactor for DefaultFactorOneKilobyte {
     const FACTOR: u64 = 1000;
 }
 
 /// Default factor of 1MB (1000 * 1000 bytes)
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DefaultFactorOneMegabyte;
 impl DefaultFactor for DefaultFactorOneMegabyte {
     const FACTOR: u64 = 1000 * 1000;
 }
 
 /// Default factor of 1GB (1000 * 1000 * 1000 bytes)
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DefaultFactorOneGigabyte;
 impl DefaultFactor for DefaultFactorOneGigabyte {
     const FACTOR: u64 = 1000 * 1000 * 1000;
 }
 
 /// Default factor of 1KiB (1024 bytes)
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DefaultFactorOneKibibyte;
 impl DefaultFactor for DefaultFactorOneKibibyte {
     const FACTOR: u64 = 1024;
 }
 
 /// Default factor of 1MiB (1024 * 1024 bytes)
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DefaultFactorOneMebibyte;
 impl DefaultFactor for DefaultFactorOneMebibyte {
     const FACTOR: u64 = 1024 * 1024;
 }
 
 /// Default factor of 1GiB (1024 * 1024 * 1024 bytes)
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DefaultFactorOneGibibyte;
 impl DefaultFactor for DefaultFactorOneGibibyte {
     const FACTOR: u64 = 1024 * 1024 * 1024;
@@ -84,7 +85,7 @@ impl DefaultFactor for DefaultFactorOneGibibyte {
 /// let bytes = ByteUnit::<DefaultFactorOneMegabyte>::from(1);
 /// assert_eq!(bytes.bytes().unwrap(), 1 * 1000 * 1000);
 /// ```
-#[derive(Debug, Serialize, Deserialize, Eq)]
+#[derive(Debug, Serialize, Deserialize, Eq, Clone)]
 #[serde(untagged)]
 pub enum ByteUnit<D: DefaultFactor = DefaultFactorOne> {
     Number(u64),
@@ -101,6 +102,9 @@ impl<D: DefaultFactor> ByteUnit<D> {
             ByteUnit::String(s) => {
                 if s.chars().all(|c| c.is_ascii_digit()) {
                     return Ok(s.parse::<u64>().map_err(|e| e.to_string())? * D::FACTOR);
+                }
+                if let Ok(_size) = s.parse::<ByteSize>() {
+                    return s.parse::<ByteSize>().map(|b| b.as_u64());
                 }
                 s.parse::<ByteSize>().map(|b| b.as_u64())
             }
@@ -130,6 +134,41 @@ impl<D: DefaultFactor> From<u64> for ByteUnit<D> {
     }
 }
 
+/// Implements Display for ByteUnit to enable string formatting in templates and logs.
+///
+/// This implementation renders the byte size in a human-readable format with appropriate 
+/// unit suffixes.
+///
+/// # Examples
+///
+/// ```
+/// use gevulot_rs::models::{ByteUnit, DefaultFactorOneMegabyte};
+/// use std::fmt::Display;
+///
+/// let size = ByteUnit::<DefaultFactorOneMegabyte>::from(512);
+/// assert_eq!(format!("{}", size), "512000000 bytes");
+/// ```
+impl<D: DefaultFactor> fmt::Display for ByteUnit<D> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ByteUnit::Number(n) => {
+                let bytes = *n * D::FACTOR;
+                write!(f, "{} bytes", bytes)
+            },
+            ByteUnit::String(s) => {
+                if let Ok(_size) = s.parse::<ByteSize>() {
+                    write!(f, "{}", s)
+                } else if s.chars().all(|c| c.is_ascii_digit()) {
+                    write!(f, "{} bytes", s.parse::<u64>().unwrap_or(0) * D::FACTOR)
+                } else {
+                    write!(f, "{}", s)
+                }
+            },
+            ByteUnit::Factor(_) => write!(f, "{} bytes", D::FACTOR),
+        }
+    }
+}
+
 /// Type for handling CPU/GPU core counts
 ///
 /// Supports formats like:
@@ -151,7 +190,7 @@ impl<D: DefaultFactor> From<u64> for ByteUnit<D> {
 /// let cores: CoreUnit = "500mcpu".parse().unwrap();
 /// assert_eq!(cores.millicores().unwrap(), 500);
 /// ```
-#[derive(Debug, Serialize, Deserialize, Eq)]
+#[derive(Debug, Serialize, Deserialize, Eq, Clone)]
 #[serde(untagged)]
 pub enum CoreUnit {
     Number(u64),
@@ -209,6 +248,36 @@ impl FromStr for CoreUnit {
 impl From<u64> for CoreUnit {
     fn from(n: u64) -> Self {
         CoreUnit::Number(n)
+    }
+}
+
+/// Implements Display for CoreUnit to enable string formatting in templates and logs.
+///
+/// This implementation renders CPU/GPU cores in a human-readable format,
+/// using appropriate units (cores or millicores).
+///
+/// # Examples
+///
+/// ```
+/// use gevulot_rs::models::CoreUnit;
+/// use std::fmt::Display;
+///
+/// let cores = CoreUnit::from(2);
+/// assert_eq!(format!("{}", cores), "2 cores");
+///
+/// let millicores: CoreUnit = "500mcpu".parse().unwrap();
+/// assert_eq!(format!("{}", millicores), "500mcpu");
+/// ```
+impl fmt::Display for CoreUnit {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            CoreUnit::Number(n) => {
+                write!(f, "{} cores", n)
+            },
+            CoreUnit::String(s) => {
+                write!(f, "{}", s)
+            },
+        }
     }
 }
 
@@ -272,6 +341,36 @@ impl FromStr for TimeUnit {
 impl From<u64> for TimeUnit {
     fn from(n: u64) -> Self {
         TimeUnit::Number(n)
+    }
+}
+
+/// Implements Display for TimeUnit to enable string formatting in templates and logs.
+///
+/// This implementation renders time durations in a human-readable format,
+/// using seconds for raw numbers and passing through string representations.
+///
+/// # Examples
+///
+/// ```
+/// use gevulot_rs::models::TimeUnit;
+/// use std::fmt::Display;
+///
+/// let seconds = TimeUnit::from(3600);
+/// assert_eq!(format!("{}", seconds), "3600 seconds");
+///
+/// let duration: TimeUnit = "24h".parse().unwrap();
+/// assert_eq!(format!("{}", duration), "24h");
+/// ```
+impl fmt::Display for TimeUnit {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TimeUnit::Number(n) => {
+                write!(f, "{} seconds", n)
+            },
+            TimeUnit::String(s) => {
+                write!(f, "{}", s)
+            },
+        }
     }
 }
 
@@ -485,5 +584,32 @@ mod tests {
 
         let cores: CoreUnit = serde_json::from_str("2").unwrap();
         assert_eq!(cores.millicores().unwrap(), 2000);
+    }
+
+    #[test]
+    fn test_display_implementations() {
+        // Test ByteUnit Display
+        let bytes = ByteUnit::<DefaultFactorOne>::from(1024);
+        assert_eq!(format!("{}", bytes), "1024 bytes");
+
+        let megabytes = ByteUnit::<DefaultFactorOneMegabyte>::from(5);
+        assert_eq!(format!("{}", megabytes), "5000000 bytes");
+
+        let parsed_bytes: ByteUnit = "2.5GB".parse().unwrap();
+        assert_eq!(format!("{}", parsed_bytes), "2.5GB");
+
+        // Test CoreUnit Display
+        let cores = CoreUnit::from(4);
+        assert_eq!(format!("{}", cores), "4 cores");
+
+        let millicores: CoreUnit = "500mcpu".parse().unwrap();
+        assert_eq!(format!("{}", millicores), "500mcpu");
+
+        // Test TimeUnit Display
+        let seconds = TimeUnit::from(60);
+        assert_eq!(format!("{}", seconds), "60 seconds");
+
+        let duration: TimeUnit = "30m".parse().unwrap();
+        assert_eq!(format!("{}", duration), "30m");
     }
 }
