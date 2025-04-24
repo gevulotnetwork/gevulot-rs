@@ -50,6 +50,7 @@ pub struct GevulotClientBuilder {
     mnemonic: Option<String>,
     private_key: Option<String>,
     password: Option<String>,
+    sequence: Option<u64>,
 }
 
 impl Default for GevulotClientBuilder {
@@ -66,6 +67,7 @@ impl Default for GevulotClientBuilder {
             mnemonic: None,
             private_key: None,
             password: None,
+            sequence: None,
         }
     }
 }
@@ -168,6 +170,11 @@ impl GevulotClientBuilder {
         self
     }
 
+    pub fn sequence(mut self, sequence: u64) -> Self {
+        self.sequence = Some(sequence);
+        self
+    }
+
     /// Builds the GevulotClient with the provided configuration
     pub async fn build(self) -> Result<GevulotClient> {
         // Create a new BaseClient with the provided endpoint, gas price, and gas multiplier
@@ -193,6 +200,10 @@ impl GevulotClientBuilder {
                 .set_mnemonic(&mnemonic, self.password.as_deref())?;
         } else if let Some(private_key) = self.private_key {
             base_client.write().await.set_private_key(&private_key)?;
+        }
+
+        if let Some(sequence) = self.sequence {
+            base_client.write().await.account_sequence = Some(sequence);
         }
 
         // Create and return the GevulotClient with the initialized clients
