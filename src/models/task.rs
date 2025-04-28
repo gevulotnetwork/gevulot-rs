@@ -203,8 +203,8 @@ impl From<gevulot::TaskSpec> for TaskSpec {
                 })
                 .collect(),
             resources: TaskResources {
-                cpus: proto.cpus.into(),
-                gpus: proto.gpus.into(),
+                cpus: crate::models::CoreUnit::from_millicores(proto.cpus),
+                gpus: crate::models::CoreUnit::from_millicores(proto.gpus),
                 memory: proto.memory.into(),
                 time: proto.time.into(),
             },
@@ -626,5 +626,54 @@ mod tests {
         assert_eq!(task.metadata.labels[0].value, "test");
         assert_eq!(task.metadata.labels[1].key, "priority");
         assert_eq!(task.metadata.labels[1].value, "high");
+    }
+
+    #[test]
+    fn test_convert_proto_task_spec_to_model() {
+        let spec = TaskSpec::from(gevulot::TaskSpec {
+            image: "image".to_string(),
+            command: vec!["cmd".to_string()],
+            args: vec!["arg".to_string()],
+            env: vec![gevulot::TaskEnv {
+                name: "name".to_string(),
+                value: "value".to_string(),
+            }],
+            input_contexts: vec![gevulot::InputContext {
+                source: "source".to_string(),
+                target: "target".to_string(),
+            }],
+            output_contexts: vec![gevulot::OutputContext {
+                source: "source".to_string(),
+                retention_period: 123,
+            }],
+            cpus: 1000,
+            gpus: 1000,
+            memory: 1,
+            time: 1,
+            store_stdout: true,
+            store_stderr: true,
+            workflow_ref: "ref".to_string(),
+        });
+        assert_eq!(spec.image, "image".to_string());
+        assert_eq!(spec.command, vec!["cmd".to_string()]);
+        assert_eq!(spec.args, vec!["arg".to_string()]);
+        assert_eq!(spec.env.len(), 1);
+        assert_eq!(spec.env[0].name, "name".to_string());
+        assert_eq!(spec.env[0].value, "value".to_string());
+        assert_eq!(spec.input_contexts.len(), 1);
+        assert_eq!(spec.input_contexts[0].source, "source".to_string());
+        assert_eq!(spec.input_contexts[0].target, "target".to_string());
+        assert_eq!(spec.output_contexts.len(), 1);
+        assert_eq!(spec.output_contexts[0].source, "source".to_string());
+        assert_eq!(spec.output_contexts[0].retention_period, 123);
+        assert_eq!(spec.resources.cpus, crate::models::CoreUnit::Number(1));
+        assert_eq!(spec.resources.gpus, crate::models::CoreUnit::Number(1));
+        assert_eq!(
+            spec.resources.memory,
+            crate::models::ByteUnit::<crate::models::DefaultFactorOne>::Number(1)
+        );
+        assert_eq!(spec.resources.time, crate::models::TimeUnit::Number(1));
+        assert!(spec.store_stderr);
+        assert!(spec.store_stdout);
     }
 }
