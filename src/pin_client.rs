@@ -101,6 +101,23 @@ impl PinClient {
         Ok(resp)
     }
 
+    /// Creates a new pin asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the details of the pin to create.
+    ///
+    /// # Returns
+    pub async fn create_async(&mut self, msg: MsgCreatePin) -> Result<String> {
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
+            .await?;
+        Ok(resp)
+    }
+
     /// Deletes a pin.
     ///
     /// # Arguments
@@ -124,6 +141,29 @@ impl PinClient {
         Ok(resp)
     }
 
+    /// Deletes a pin asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the details of the pin to delete.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the hash of the delete pin operation or an error.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the request to the Gevulot client fails.
+    pub async fn delete_async(&mut self, msg: MsgDeletePin) -> Result<String> {
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
+            .await?;
+        Ok(resp)
+    }
+
     /// Acknowledges a pin.
     ///
     /// # Arguments
@@ -143,6 +183,29 @@ impl PinClient {
             .write()
             .await
             .send_msg_sync(msg, "")
+            .await?;
+        Ok(resp)
+    }
+
+    /// Acknowledges a pin asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the details of the pin to acknowledge.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the hash of the acknowledge pin operation or an error.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the request to the Gevulot client fails.
+    pub async fn ack_async(&mut self, msg: MsgAckPin) -> Result<String> {
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
             .await?;
         Ok(resp)
     }

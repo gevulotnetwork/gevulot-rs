@@ -6,7 +6,10 @@ use crate::sudo_client::SudoClient;
 use crate::task_client::TaskClient;
 use crate::worker_client::WorkerClient;
 use crate::workflow_client::WorkflowClient;
+use crate::Error;
 use std::sync::Arc;
+use cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
+use prost::Message;
 use tokio::sync::RwLock;
 
 /// GevulotClient exposes all gevulot specific functionality
@@ -24,6 +27,14 @@ pub struct GevulotClient {
     pub sudo: SudoClient,
     // raw access to base functionality so we don't lock out ourselves
     pub base_client: Arc<RwLock<BaseClient>>,
+}
+
+impl GevulotClient {
+    /// wait_for_tx waits for a tx to be included in a block
+    pub async fn wait_for_tx(&self, tx_hash: &str, timeout: Option<tokio::time::Duration>) -> Result<()> {
+        self.base_client.write().await.wait_for_tx(tx_hash, timeout).await?;
+        Ok(())
+    }
 }
 
 impl From<BaseClient> for GevulotClient {

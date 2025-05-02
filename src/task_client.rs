@@ -100,6 +100,29 @@ impl TaskClient {
         Ok(resp)
     }
 
+    /// Creates a new task asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the task details.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the hash of the create task operation or an error.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the request to the Gevulot client fails.
+    pub async fn create_async(&mut self, msg: MsgCreateTask) -> Result<String> {
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
+            .await?;
+        Ok(resp)
+    }
+
     /// Deletes a task.
     ///
     /// # Arguments
@@ -119,6 +142,29 @@ impl TaskClient {
             .write()
             .await
             .send_msg_sync(msg, "")
+            .await?;
+        Ok(resp)
+    }
+
+    /// Deletes a task asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the task ID to delete.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the hash of the delete task operation or an error.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the request to the Gevulot client fails.
+    pub async fn delete_async(&mut self, msg: MsgDeleteTask) -> Result<String> {
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
             .await?;
         Ok(resp)
     }
@@ -146,6 +192,29 @@ impl TaskClient {
         Ok(resp)
     }
 
+    /// Accepts a task asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the task ID to accept.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the hash of the accept task operation or an error.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the request to the Gevulot client fails.
+    pub async fn accept_async(&mut self, msg: MsgAcceptTask) -> Result<String> {
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
+            .await?;
+        Ok(resp)
+    }
+
     /// Declines a task.
     ///
     /// # Arguments
@@ -165,6 +234,29 @@ impl TaskClient {
             .write()
             .await
             .send_msg_sync(msg, "")
+            .await?;
+        Ok(resp)
+    }
+
+    /// Declines a task asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the task ID to decline.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the hash of the decline task operation or an error.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the request to the Gevulot client fails.
+    pub async fn decline_async(&mut self, msg: MsgDeclineTask) -> Result<String> {
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
             .await?;
         Ok(resp)
     }
@@ -192,6 +284,29 @@ impl TaskClient {
         Ok(resp)
     }
 
+    /// Finishes a task asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the task ID to finish.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the hash of the finish task operation or an error.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the request to the Gevulot client fails.
+    pub async fn finish_async(&mut self, msg: MsgFinishTask) -> Result<String> {
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
+            .await?;
+        Ok(resp)
+    }
+
     /// Reschedules a task.
     ///
     /// # Arguments
@@ -210,6 +325,29 @@ impl TaskClient {
             .write()
             .await
             .send_msg_sync(msg, "")
+            .await?;
+        Ok(resp)
+    }
+
+    /// Reschedules a task asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the task ID to reschedule.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the hash of the reschedule task operation or an error.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the request to the Gevulot client fails.
+    pub async fn reschedule_async(&mut self, msg: MsgRescheduleTask) -> Result<String> {
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
             .await?;
         Ok(resp)
     }

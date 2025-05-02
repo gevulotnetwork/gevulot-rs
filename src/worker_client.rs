@@ -134,6 +134,30 @@ impl WorkerClient {
         Ok(resp)
     }
 
+    /// Creates a new worker asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the worker details.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the hash of the create worker operation or an error.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the request to the Gevulot client fails.
+    pub async fn create_async(&mut self, msg: MsgCreateWorker) -> Result<String> {
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
+            .await?;
+        Ok(resp)
+    }
+    
+
     /// Updates a worker.
     ///
     /// # Arguments
@@ -153,6 +177,29 @@ impl WorkerClient {
             .write()
             .await
             .send_msg_sync(msg, "")
+            .await?;
+        Ok(resp)
+    }
+
+    /// Updates a worker asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the worker details to update.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the hash of the update worker operation or an error.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the request to the Gevulot client fails.
+    pub async fn update_async(&mut self, msg: MsgUpdateWorker) -> Result<String> {
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
             .await?;
         Ok(resp)
     }
@@ -180,6 +227,29 @@ impl WorkerClient {
         Ok(resp)
     }
 
+    /// Deletes a worker asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the worker ID to delete.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the hash of the delete worker operation or an error.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the request to the Gevulot client fails.
+    pub async fn delete_async(&mut self, msg: MsgDeleteWorker) -> Result<String> {  
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
+            .await?;
+        Ok(resp)
+    }
+
     /// Announces a worker's exit.
     ///
     /// # Arguments
@@ -202,6 +272,29 @@ impl WorkerClient {
             .write()
             .await
             .send_msg_sync(msg, "")
+            .await?;
+        Ok(resp)
+    }
+
+    /// Announces a worker's exit asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the worker ID to announce exit.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the hash of the announce worker exit operation or an error.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the request to the Gevulot client fails.
+    pub async fn announce_exit_async(&mut self, msg: MsgAnnounceWorkerExit) -> Result<String> {
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
             .await?;
         Ok(resp)
     }
