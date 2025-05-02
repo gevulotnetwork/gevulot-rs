@@ -19,9 +19,13 @@ message TaskSpec {
   repeated TaskEnv env = 4;
   repeated InputContext inputContexts = 5;
   repeated OutputContext outputContexts = 6;
+  // CPU millicores required (1 core = 1000 millicores)
   uint64 cpus = 7;
+  // GPU millicores required (1 core = 1000 millicores)
   uint64 gpus = 8;
+  // Memory required in bytes
   uint64 memory = 9;
+  // Time limit in seconds
   uint64 time = 10;
   bool storeStdout = 11;
   bool storeStderr = 12;

@@ -187,6 +187,18 @@ impl CoreUnit {
             }
         }
     }
+
+    /// Create from millicores value (1 core = 1000 millicores).
+    ///
+    /// If `mcores` represents an integer number of cores (evenly divisible by 1000),
+    /// then [`CoreUnit::Number`] is returned. Otherwise [`CoreUnit::String`] is returned.
+    pub fn from_millicores(mcores: u64) -> Self {
+        if mcores % 1000 == 0 {
+            Self::Number(mcores / 1000)
+        } else {
+            Self::String(mcores.to_string() + "millicores")
+        }
+    }
 }
 
 impl PartialEq for CoreUnit {
@@ -207,6 +219,7 @@ impl FromStr for CoreUnit {
 }
 
 impl From<u64> for CoreUnit {
+    /// Convert number of full cores into `CoreUnit`.
     fn from(n: u64) -> Self {
         CoreUnit::Number(n)
     }
@@ -420,6 +433,17 @@ mod tests {
 
         let cores: CoreUnit = 2.into();
         assert_eq!(cores.millicores().unwrap(), 2000);
+
+        assert_eq!(CoreUnit::from_millicores(0), CoreUnit::Number(0));
+        assert_eq!(CoreUnit::from_millicores(1000), CoreUnit::Number(1));
+        assert_eq!(
+            CoreUnit::from_millicores(1234),
+            CoreUnit::String("1234millicores".to_string())
+        );
+
+        assert_eq!(CoreUnit::from_millicores(0).millicores().unwrap(), 0);
+        assert_eq!(CoreUnit::from_millicores(1000).millicores().unwrap(), 1000);
+        assert_eq!(CoreUnit::from_millicores(1234).millicores().unwrap(), 1234);
     }
 
     #[test]
