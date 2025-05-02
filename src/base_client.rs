@@ -118,7 +118,7 @@ impl BaseClient {
     /// Sets the signer for the client.
     ///
     /// # Arguments
-    ///
+    ///account_sequence
     /// * `signer` - The GevulotSigner to be set.
     pub fn set_signer(&mut self, signer: GevulotSigner) {
         self.address = Some(signer.0.public_address.to_string());

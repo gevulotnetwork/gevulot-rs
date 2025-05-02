@@ -98,6 +98,29 @@ impl WorkflowClient {
         Ok(resp)
     }
 
+    /// Creates a new workflow asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the workflow details.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the hash of the create workflow operation or an error.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the request to the Gevulot client fails.
+    pub async fn create_async(&mut self, msg: MsgCreateWorkflow) -> Result<String> {
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
+            .await?;
+        Ok(resp)
+    }   
+
     /// Deletes a workflow.
     ///
     /// # Arguments
@@ -117,6 +140,29 @@ impl WorkflowClient {
             .write()
             .await
             .send_msg_sync(msg, "")
+            .await?;
+        Ok(resp)
+    }
+
+    /// Deletes a workflow asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message containing the workflow ID to delete.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the hash of the delete workflow operation or an error.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the request to the Gevulot client fails.
+    pub async fn delete_async(&mut self, msg: MsgDeleteWorkflow) -> Result<String> {
+        let resp = self
+            .base_client
+            .write()
+            .await
+            .send_msg(msg, "")
             .await?;
         Ok(resp)
     }
