@@ -79,6 +79,16 @@ impl Mount {
             data: Some("trans=virtio,version=9p2000.L".to_string()),
         }
     }
+
+    pub fn ext4(source: String, target: String) -> Self {
+        Self {
+            source,
+            target,
+            fstype: Some("ext4".to_string()),
+            flags: None,
+            data: None,
+        }
+    }
 }
 
 /// Debug exit method depending on ISA.
